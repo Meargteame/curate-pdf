@@ -1,0 +1,745 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { 
+  Download, 
+  Printer, 
+  Save, 
+  ArrowLeft, 
+  Eye, 
+  Sliders, 
+  FileText, 
+  Plus, 
+  Trash2, 
+  ZoomIn, 
+  ZoomOut, 
+  Maximize2,
+  CheckCircle,
+  Sparkles,
+  ChevronDown
+} from 'lucide-react';
+import { DocumentData, LineItem, DocumentSection } from '../../types';
+import { 
+  getStoredDocumentById, 
+  getStoredTemplates, 
+  getStoredBrandKit, 
+  upsertDocument 
+} from '../../utils/storage';
+import { generateAndDownloadPdf, triggerNativePrint } from '../../utils/pdfGenerator';
+import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
+import { Button } from '../../components/ui/Button';
+import { Input, Textarea, Select } from '../../components/ui/Input';
+import { Tabs } from '../../components/ui/Toast';
+import { Badge } from '../../components/ui/Badge';
+
+export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const docId = searchParams.get('id');
+  const templateId = searchParams.get('template') || 'tpl-proposal-modern';
+
+  const brandKit = getStoredBrandKit();
+  const templates = getStoredTemplates();
+
+  // Initialize document state
+  const [doc, setDoc] = useState<DocumentData>(() => {
+    if (docId) {
+      const existing = getStoredDocumentById(docId);
+      if (existing) return existing;
+    }
+    // Load from chosen template or default
+    const matchedTemplate = templates.find(t => t.id === templateId) || templates[0];
+    const newDocId = `doc-${Date.now().toString(36)}`;
+    return {
+      id: newDocId,
+      title: matchedTemplate.defaultData.title || 'Untitled Document',
+      referenceNumber: matchedTemplate.defaultData.referenceNumber || `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
+      templateId: matchedTemplate.id,
+      category: matchedTemplate.category,
+      status: 'ready',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      date: new Date().toISOString().split('T')[0],
+      dueDate: matchedTemplate.defaultData.dueDate,
+      clientName: matchedTemplate.defaultData.clientName || '',
+      clientCompany: matchedTemplate.defaultData.clientCompany || '',
+      clientEmail: matchedTemplate.defaultData.clientEmail || '',
+      clientAddress: matchedTemplate.defaultData.clientAddress || '',
+      summary: matchedTemplate.defaultData.summary || '',
+      sections: matchedTemplate.defaultData.sections || [
+        { id: '1', title: 'Scope & Objectives', content: 'Detailed scope of engagement and milestones.' }
+      ],
+      lineItems: matchedTemplate.defaultData.lineItems || [
+        { id: '1', description: 'Professional Services', quantity: 1, rate: 2500 }
+      ],
+      subtotal: matchedTemplate.defaultData.subtotal || 2500,
+      taxTotal: matchedTemplate.defaultData.taxTotal || 0,
+      total: matchedTemplate.defaultData.total || 2500,
+      currency: matchedTemplate.defaultData.currency || 'USD',
+      paymentTerms: matchedTemplate.defaultData.paymentTerms || '',
+      recipientName: matchedTemplate.defaultData.recipientName || '',
+      awardTitle: matchedTemplate.defaultData.awardTitle || '',
+      candidateRole: matchedTemplate.defaultData.candidateRole || '',
+      candidateSkills: matchedTemplate.defaultData.candidateSkills || [],
+      pageSize: matchedTemplate.defaultData.pageSize || 'A4',
+      orientation: matchedTemplate.defaultData.orientation || 'portrait',
+      margin: matchedTemplate.defaultData.margin || 'standard',
+    };
+  });
+
+  // UI States
+  const [activeTab, setActiveTab] = useState<'content' | 'style' | 'export'>('content');
+  const [mobileMode, setMobileMode] = useState<'edit' | 'preview'>('edit');
+  const [zoom, setZoom] = useState<number>(0.85);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Recalculate totals whenever lineItems change
+  useEffect(() => {
+    if (doc.lineItems && doc.lineItems.length > 0) {
+      const sub = doc.lineItems.reduce((acc, item) => acc + (Number(item.quantity) || 0) * (Number(item.rate) || 0), 0);
+      const tax = doc.taxTotal !== undefined ? doc.taxTotal : 0;
+      setDoc(prev => ({
+        ...prev,
+        subtotal: sub,
+        total: sub + tax,
+      }));
+    }
+  }, [doc.lineItems?.map(i => `${i.quantity}-${i.rate}`).join(',')]);
+
+  // Handlers for Line Items
+  const handleAddLineItem = () => {
+    const newItem: LineItem = {
+      id: Date.now().toString(),
+      description: 'New Deliverable or Service',
+      quantity: 1,
+      rate: 500,
+    };
+    setDoc(prev => ({
+      ...prev,
+      lineItems: [...(prev.lineItems || []), newItem],
+    }));
+  };
+
+  const handleUpdateLineItem = (id: string, field: keyof LineItem, value: any) => {
+    setDoc(prev => ({
+      ...prev,
+      lineItems: (prev.lineItems || []).map(item => {
+        if (item.id === id) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      }),
+    }));
+  };
+
+  const handleRemoveLineItem = (id: string) => {
+    setDoc(prev => ({
+      ...prev,
+      lineItems: (prev.lineItems || []).filter(item => item.id !== id),
+    }));
+  };
+
+  // Handlers for Sections
+  const handleAddSection = () => {
+    const newSec: DocumentSection = {
+      id: Date.now().toString(),
+      title: 'Additional Section',
+      content: 'Enter section details here...',
+    };
+    setDoc(prev => ({
+      ...prev,
+      sections: [...(prev.sections || []), newSec],
+    }));
+  };
+
+  const handleUpdateSection = (id: string, field: keyof DocumentSection, value: string) => {
+    setDoc(prev => ({
+      ...prev,
+      sections: (prev.sections || []).map(sec => {
+        if (sec.id === id) {
+          return { ...sec, [field]: value };
+        }
+        return sec;
+      }),
+    }));
+  };
+
+  const handleRemoveSection = (id: string) => {
+    setDoc(prev => ({
+      ...prev,
+      sections: (prev.sections || []).filter(sec => sec.id !== id),
+    }));
+  };
+
+  // Save Document
+  const handleSave = () => {
+    setIsSaving(true);
+    upsertDocument(doc);
+    setTimeout(() => {
+      setIsSaving(false);
+      if (onShowToast) {
+        onShowToast('Document saved', `"${doc.title}" has been saved successfully.`, 'success');
+      }
+    }, 400);
+  };
+
+  // Generate & Download PDF
+  const handleDownloadPDF = async () => {
+    setIsGenerating(true);
+    // Auto-save state
+    upsertDocument({ ...doc, status: 'generated' });
+
+    try {
+      const fileName = `${doc.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.pdf`;
+      const success = await generateAndDownloadPdf({
+        fileName,
+        pageSize: doc.pageSize,
+        orientation: doc.orientation,
+      });
+
+      if (success) {
+        if (onShowToast) {
+          onShowToast('PDF Generated Successfully', `Downloaded ${fileName}`, 'success');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      if (onShowToast) {
+        onShowToast('Generation Error', 'Fallback printing opened.', 'error');
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-6rem)] -m-4 sm:-m-8">
+      {/* Top Action Subheader */}
+      <div className="bg-white border-b border-paper-border px-4 sm:px-6 py-3 flex items-center justify-between shrink-0 shadow-2xs z-20">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/app/documents')}
+            className="text-slate-500 hover:text-ink -ml-2"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+
+          <div className="h-5 w-px bg-paper-border hidden sm:block" />
+
+          <div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={doc.title}
+                onChange={(e) => setDoc({ ...doc, title: e.target.value })}
+                className="font-display font-bold text-sm sm:text-base text-ink bg-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-forest px-1.5 py-0.5 rounded border border-transparent hover:border-paper-border transition-colors w-48 sm:w-80"
+                placeholder="Document Title"
+              />
+              <Badge status={doc.status} size="sm" className="hidden md:inline-flex" />
+            </div>
+            <p className="text-[11px] text-slate-400 pl-1.5 font-mono">
+              {doc.referenceNumber} • {doc.category}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Edit/Preview switch */}
+          <div className="lg:hidden flex bg-paper-subtle p-0.5 rounded-lg border border-paper-border">
+            <button
+              onClick={() => setMobileMode('edit')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded ${mobileMode === 'edit' ? 'bg-white shadow-2xs text-forest' : 'text-slate-500'}`}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setMobileMode('preview')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded ${mobileMode === 'preview' ? 'bg-white shadow-2xs text-forest' : 'text-slate-500'}`}
+            >
+              Preview
+            </button>
+          </div>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleSave}
+            loading={isSaving}
+            leftIcon={<Save className="w-3.5 h-3.5" />}
+            className="text-xs hidden sm:inline-flex"
+          >
+            Save Draft
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={triggerNativePrint}
+            leftIcon={<Printer className="w-3.5 h-3.5" />}
+            className="text-xs hidden md:inline-flex"
+          >
+            Print
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleDownloadPDF}
+            loading={isGenerating}
+            leftIcon={<Download className="w-3.5 h-3.5" />}
+            className="text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Split Body: Editor Left + Live Preview Right */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Editing Controls Panel */}
+        <div className={`w-full lg:w-[480px] xl:w-[520px] bg-white border-r border-paper-border flex flex-col shrink-0 ${mobileMode === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* Tabs header */}
+          <div className="p-3 border-b border-paper-border bg-paper-subtle/40">
+            <Tabs
+              variant="segmented"
+              activeTab={activeTab}
+              onChange={(tab) => setActiveTab(tab as any)}
+              tabs={[
+                { id: 'content', label: '1. Content & Data', icon: <FileText className="w-3.5 h-3.5" /> },
+                { id: 'style', label: '2. Brand & Style', icon: <Sliders className="w-3.5 h-3.5" /> },
+                { id: 'export', label: '3. Page Settings', icon: <Eye className="w-3.5 h-3.5" /> },
+              ]}
+            />
+          </div>
+
+          {/* Tab 1: Content & Data Form */}
+          {activeTab === 'content' && (
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              {/* Document Metadata */}
+              <div className="space-y-3 pb-4 border-b border-paper-border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Core Document Information
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Reference Number"
+                    value={doc.referenceNumber}
+                    onChange={(e) => setDoc({ ...doc, referenceNumber: e.target.value })}
+                  />
+                  <Input
+                    label="Issue Date"
+                    type="date"
+                    value={doc.date}
+                    onChange={(e) => setDoc({ ...doc, date: e.target.value })}
+                  />
+                </div>
+                {doc.category === 'finance' && (
+                  <Input
+                    label="Payment Due Date"
+                    type="date"
+                    value={doc.dueDate || ''}
+                    onChange={(e) => setDoc({ ...doc, dueDate: e.target.value })}
+                  />
+                )}
+                <Textarea
+                  label="Executive Summary or Notes"
+                  rows={2}
+                  value={doc.summary || ''}
+                  onChange={(e) => setDoc({ ...doc, summary: e.target.value })}
+                  placeholder="Brief overview or cover remarks..."
+                />
+              </div>
+
+              {/* Recipient / Client Entity */}
+              {doc.category !== 'certificates' && (
+                <div className="space-y-3 pb-4 border-b border-paper-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                    Recipient / Client Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="Client Contact Name"
+                      value={doc.clientName || ''}
+                      onChange={(e) => setDoc({ ...doc, clientName: e.target.value })}
+                      placeholder="e.g. Sarah Jenkins"
+                    />
+                    <Input
+                      label="Company Name"
+                      value={doc.clientCompany || ''}
+                      onChange={(e) => setDoc({ ...doc, clientCompany: e.target.value })}
+                      placeholder="e.g. Northwind Enterprises"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="Email Address"
+                      value={doc.clientEmail || ''}
+                      onChange={(e) => setDoc({ ...doc, clientEmail: e.target.value })}
+                      placeholder="client@example.com"
+                    />
+                    <Input
+                      label="Physical Address / Location"
+                      value={doc.clientAddress || ''}
+                      onChange={(e) => setDoc({ ...doc, clientAddress: e.target.value })}
+                      placeholder="City, State, Country"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Certificate Specific Fields */}
+              {doc.category === 'certificates' && (
+                <div className="space-y-3 pb-4 border-b border-paper-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                    Certificate Details
+                  </h4>
+                  <Input
+                    label="Recipient Full Name"
+                    value={doc.recipientName || ''}
+                    onChange={(e) => setDoc({ ...doc, recipientName: e.target.value })}
+                  />
+                  <Input
+                    label="Award / Certification Title"
+                    value={doc.awardTitle || ''}
+                    onChange={(e) => setDoc({ ...doc, awardTitle: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {/* Line Items Table (Invoices & Proposals) */}
+              {doc.lineItems && (
+                <div className="space-y-3 pb-4 border-b border-paper-border">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                      Line Items & Pricing Table
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddLineItem}
+                      leftIcon={<Plus className="w-3 h-3" />}
+                      className="text-xs h-7"
+                    >
+                      Add Row
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {doc.lineItems.map((item, idx) => (
+                      <div key={item.id} className="p-2.5 rounded-lg border border-paper-border bg-paper-subtle/50 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            value={item.description}
+                            onChange={(e) => handleUpdateLineItem(item.id, 'description', e.target.value)}
+                            placeholder="Description"
+                            className="flex-1 text-xs font-medium bg-white border border-paper-border rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={() => handleRemoveLineItem(item.id)}
+                            className="text-slate-400 hover:text-red-600 p-1"
+                            title="Remove item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Qty / Hours</span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateLineItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                              className="w-full text-xs bg-white border border-paper-border rounded px-2 py-1 mt-0.5"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Rate ($)</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="10"
+                              value={item.rate}
+                              onChange={(e) => handleUpdateLineItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                              className="w-full text-xs bg-white border border-paper-border rounded px-2 py-1 mt-0.5"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {doc.category === 'finance' && (
+                    <div className="pt-2">
+                      <Input
+                        label="Payment Terms / Wire Instructions"
+                        value={doc.paymentTerms || ''}
+                        onChange={(e) => setDoc({ ...doc, paymentTerms: e.target.value })}
+                        placeholder="e.g. Net 30 Days. Wire to routing #..."
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sections (Scope, Terms, Overview) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                    Document Text Sections
+                  </h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddSection}
+                    leftIcon={<Plus className="w-3 h-3" />}
+                    className="text-xs h-7"
+                  >
+                    Add Section
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {(doc.sections || []).map((sec) => (
+                    <div key={sec.id} className="p-3 rounded-lg border border-paper-border bg-paper-subtle/50 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <input
+                          type="text"
+                          value={sec.title}
+                          onChange={(e) => handleUpdateSection(sec.id, 'title', e.target.value)}
+                          placeholder="Section Title"
+                          className="flex-1 text-xs font-bold bg-white border border-paper-border rounded px-2 py-1"
+                        />
+                        <button
+                          onClick={() => handleRemoveSection(sec.id)}
+                          className="text-slate-400 hover:text-red-600 p-1"
+                          title="Remove section"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={sec.content}
+                        onChange={(e) => handleUpdateSection(sec.id, 'content', e.target.value)}
+                        placeholder="Section content..."
+                        className="w-full text-xs bg-white border border-paper-border rounded p-2"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 2: Brand & Style Controls */}
+          {activeTab === 'style' && (
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Document Brand Palette
+                </h4>
+                <div>
+                  <label className="text-xs font-semibold text-ink block mb-2">Primary Header Accent</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={doc.customBranding?.primaryColor || brandKit.primaryColor}
+                      onChange={(e) => setDoc({
+                        ...doc,
+                        customBranding: { ...doc.customBranding, primaryColor: e.target.value }
+                      })}
+                      className="w-10 h-10 rounded border border-paper-border cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <span className="text-xs font-mono font-semibold text-ink">
+                        {doc.customBranding?.primaryColor || brandKit.primaryColor}
+                      </span>
+                      <p className="text-[11px] text-slate-500">Used for headers, borders, and dominant marks</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-ink block mb-2">Secondary Accent</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={doc.customBranding?.accentColor || brandKit.accentColor}
+                      onChange={(e) => setDoc({
+                        ...doc,
+                        customBranding: { ...doc.customBranding, accentColor: e.target.value }
+                      })}
+                      className="w-10 h-10 rounded border border-paper-border cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <span className="text-xs font-mono font-semibold text-ink">
+                        {doc.customBranding?.accentColor || brandKit.accentColor}
+                      </span>
+                      <p className="text-[11px] text-slate-500">Used for bullets, sub-marks, and tags</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-paper-border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Entity Brand Information
+                </h4>
+                <Input
+                  label="Display Organization Name"
+                  value={doc.customBranding?.companyName || brandKit.companyName}
+                  onChange={(e) => setDoc({
+                    ...doc,
+                    customBranding: { ...doc.customBranding, companyName: e.target.value }
+                  })}
+                />
+                <Input
+                  label="Document Footer Text"
+                  value={doc.customBranding?.footerText || brandKit.footerText}
+                  onChange={(e) => setDoc({
+                    ...doc,
+                    customBranding: { ...doc.customBranding, footerText: e.target.value }
+                  })}
+                />
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-paper-border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Header & Footer Visibility
+                </h4>
+                <label className="flex items-center gap-2.5 text-xs text-ink cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={doc.customBranding?.showLogoInHeader ?? brandKit.showLogoInHeader}
+                    onChange={(e) => setDoc({
+                      ...doc,
+                      customBranding: { ...doc.customBranding, showLogoInHeader: e.target.checked }
+                    })}
+                    className="rounded border-paper-border text-forest focus:ring-forest"
+                  />
+                  <span>Display organization monogram in header</span>
+                </label>
+                <label className="flex items-center gap-2.5 text-xs text-ink cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={doc.customBranding?.showPageNumbers ?? brandKit.showPageNumbers}
+                    onChange={(e) => setDoc({
+                      ...doc,
+                      customBranding: { ...doc.customBranding, showPageNumbers: e.target.checked }
+                    })}
+                    className="rounded border-paper-border text-forest focus:ring-forest"
+                  />
+                  <span>Display page numbers in footer</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: Page Settings & Dimensions */}
+          {activeTab === 'export' && (
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Canvas Format & Dimensions
+                </h4>
+                <Select
+                  label="Standard Page Format"
+                  value={doc.pageSize}
+                  onChange={(e) => setDoc({ ...doc, pageSize: e.target.value as any })}
+                  options={[
+                    { value: 'A4', label: 'ISO A4 (210 × 297 mm) — Global Standard' },
+                    { value: 'Letter', label: 'US Letter (8.5 × 11 in) — North America' },
+                  ]}
+                />
+                <Select
+                  label="Orientation"
+                  value={doc.orientation}
+                  onChange={(e) => setDoc({ ...doc, orientation: e.target.value as any })}
+                  options={[
+                    { value: 'portrait', label: 'Portrait (Standard vertical reading)' },
+                    { value: 'landscape', label: 'Landscape (Wide format / Certificates)' },
+                  ]}
+                />
+                <Select
+                  label="Document Margins"
+                  value={doc.margin}
+                  onChange={(e) => setDoc({ ...doc, margin: e.target.value as any })}
+                  options={[
+                    { value: 'compact', label: 'Compact Margins (High information density)' },
+                    { value: 'standard', label: 'Standard Margins (Balanced elegance)' },
+                    { value: 'relaxed', label: 'Relaxed Margins (Generous executive spacing)' },
+                  ]}
+                />
+              </div>
+
+              <div className="p-4 rounded-lg bg-forest-50 border border-forest-200 text-xs space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-forest">
+                  <Sparkles className="w-4 h-4 text-sage" />
+                  <span>Real Vector PDF Rendering</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed">
+                  When you click <strong>Download PDF</strong>, CuratePDF rasterizes vector typography at 2× pixel density directly in your browser. All text, lines, and calculations remain pixel-crisp for printing or email attachments.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Live Document Preview Viewport */}
+        <div className={`flex-1 bg-paper-subtle/70 overflow-auto relative flex flex-col ${mobileMode === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* Zoom & Viewport controls bar */}
+          <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-paper-border px-4 py-2 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <span className="font-display font-semibold text-ink">Page 1</span>
+              <span>•</span>
+              <span className="uppercase text-[11px] font-mono">{doc.pageSize} {doc.orientation}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-paper-subtle p-1 rounded-lg border border-paper-border">
+              <button
+                onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
+                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs font-mono font-medium text-ink px-1.5 min-w-[42px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={() => setZoom(prev => Math.min(1.3, prev + 0.1))}
+                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setZoom(0.85)}
+                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink text-[11px] font-semibold px-1"
+                title="Reset zoom"
+              >
+                Fit
+              </button>
+            </div>
+          </div>
+
+          {/* Canvas Scroll Area */}
+          <div className="flex-1 p-6 sm:p-10 flex justify-center items-start overflow-auto">
+            <LivePDFCanvas
+              document={doc}
+              brandKit={brandKit}
+              zoom={zoom}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

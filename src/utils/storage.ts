@@ -1,0 +1,519 @@
+import { DocumentData, TemplateDefinition, BrandKitConfig } from '../types';
+
+export const DEFAULT_BRAND_KIT: BrandKitConfig = {
+  companyName: 'Acme Advisory Group',
+  tagline: 'Strategic Management & Technology Consulting',
+  logoUrl: '',
+  primaryColor: '#0F3D2E', // Deep Forest
+  accentColor: '#3A7D5F',  // Sage Green
+  fontHeading: 'Sora',
+  fontBody: 'Inter',
+  website: 'https://acme-advisory.example.com',
+  email: 'contact@acme-advisory.example.com',
+  phone: '+1 (555) 234-5678',
+  address: '100 Montgomery St, Suite 1800, San Francisco, CA 94104',
+  footerText: 'Confidential & Proprietary • Acme Advisory Group',
+  showLogoInHeader: true,
+  showPageNumbers: true,
+};
+
+export const INITIAL_TEMPLATES: TemplateDefinition[] = [
+  {
+    id: 'tpl-proposal-modern',
+    name: 'Modern Business Proposal',
+    category: 'business',
+    description: 'Clean executive proposal layout with structured deliverables, timeline, milestones, and investment summary.',
+    badge: 'Popular',
+    pageCount: 2,
+    previewAccent: '#0F3D2E',
+    defaultData: {
+      title: 'Digital Transformation Proposal',
+      referenceNumber: 'PROP-2026-042',
+      category: 'business',
+      status: 'ready',
+      date: '2026-10-30',
+      dueDate: '2026-11-30',
+      clientName: 'Sarah Jenkins',
+      clientCompany: 'Northwind Global Enterprises',
+      clientEmail: 's.jenkins@northwind.io',
+      clientAddress: '450 Lexington Ave, New York, NY 10017',
+      summary: 'This proposal outlines our strategic engagement framework to modernize Northwind Global’s enterprise document workflows, streamline reporting systems, and ensure unified brand compliance across 14 business units.',
+      sections: [
+        {
+          id: 'sec-1',
+          title: 'Executive Summary & Objectives',
+          content: 'Northwind currently faces high operational friction in producing recurring investor and client deliverables. Acme Advisory will deploy standardized document architectures, integrate centralized template engines, and cut document generation cycle times by 65% within 90 days.'
+        },
+        {
+          id: 'sec-2',
+          title: 'Phase Deliverables & Scope',
+          content: 'Phase 1: Architecture review and brand token normalization.\nPhase 2: Template system design and multi-format preview engines.\nPhase 3: Rollout, security hardening, and staff enablement workshops.'
+        }
+      ],
+      lineItems: [
+        { id: '1', description: 'Discovery & Workflow Audit', quantity: 1, rate: 8500 },
+        { id: '2', description: 'Template System Design & Engine Setup', quantity: 1, rate: 16500 },
+        { id: '3', description: 'Enterprise Integration & Training', quantity: 1, rate: 7000 },
+      ],
+      subtotal: 32000,
+      taxTotal: 0,
+      total: 32000,
+      currency: 'USD',
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  },
+  {
+    id: 'tpl-invoice-minimal',
+    name: 'Minimalist Commercial Invoice',
+    category: 'finance',
+    description: 'Crisp financial statement with itemized services, automated totals, payment terms, and remittance instructions.',
+    badge: 'Essential',
+    pageCount: 1,
+    previewAccent: '#3A7D5F',
+    defaultData: {
+      title: 'Commercial Tax Invoice',
+      referenceNumber: 'INV-2026-089',
+      category: 'finance',
+      status: 'generated',
+      date: '2026-10-25',
+      dueDate: '2026-11-25',
+      clientName: 'Marcus Vance',
+      clientCompany: 'Aether Cloud Technologies',
+      clientEmail: 'accounts@aethercloud.net',
+      clientAddress: '782 Innovation Way, Austin, TX 78701',
+      summary: 'Thank you for your business. Payment is due within 30 days of invoice receipt via direct wire transfer or corporate ACH.',
+      paymentTerms: 'Net 30 Days. Late balance subject to 1.5% interest per month.',
+      lineItems: [
+        { id: '1', description: 'Product Design Systems Consulting (October 2026)', quantity: 40, rate: 175 },
+        { id: '2', description: 'PDF Automation Pipeline Implementation', quantity: 1, rate: 4200 },
+        { id: '3', description: 'Dedicated Infrastructure Cloud Provisioning', quantity: 1, rate: 850 },
+      ],
+      subtotal: 12050,
+      taxTotal: 964,
+      total: 13014,
+      currency: 'USD',
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  },
+  {
+    id: 'tpl-quarterly-report',
+    name: 'Executive Quarterly Report',
+    category: 'reports',
+    description: 'Structured management review with high-level KPI tables, performance summary, and strategic milestones.',
+    pageCount: 2,
+    previewAccent: '#0F3D2E',
+    defaultData: {
+      title: 'Q3 Executive Performance & Operations Report',
+      referenceNumber: 'REP-2026-Q3',
+      category: 'reports',
+      status: 'ready',
+      date: '2026-10-15',
+      summary: 'Comprehensive performance review covering operational velocity, document automation milestones, and resource utilization across Q3 2026.',
+      sections: [
+        {
+          id: 'rep-1',
+          title: 'Key Operational Highlights',
+          content: 'During Q3, document turnaround latency dropped from 4.2 hours to 8.6 seconds using automated template pipelines. Overall document output scaled to 142,000 generated units with zero formatting discrepancies.'
+        },
+        {
+          id: 'rep-2',
+          title: 'Financial Efficiency & Resource Allocation',
+          content: 'Cost per generated deliverable reduced by 72% year-over-year. Administrative hours redirected to client advisory totaled over 480 hours this quarter.'
+        }
+      ],
+      lineItems: [
+        { id: '1', description: 'Enterprise Documents Generated', quantity: 142000, rate: 0.08 },
+        { id: '2', description: 'Infrastructure Cost Saved', quantity: 1, rate: 38400 },
+      ],
+      subtotal: 49760,
+      total: 49760,
+      currency: 'USD',
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  },
+  {
+    id: 'tpl-project-sow',
+    name: 'Client Statement of Work (SOW)',
+    category: 'operations',
+    description: 'Detailed scope definition, deliverables schedule, assumptions, and acceptance criteria for professional services.',
+    pageCount: 2,
+    previewAccent: '#0F3D2E',
+    defaultData: {
+      title: 'Statement of Work: Design System Migration',
+      referenceNumber: 'SOW-2026-018',
+      category: 'operations',
+      status: 'ready',
+      date: '2026-10-28',
+      clientName: 'Elena Rostova',
+      clientCompany: 'Vanguard Media Group',
+      clientEmail: 'e.rostova@vanguardmg.com',
+      summary: 'This Statement of Work specifies the technical specifications, delivery timeline, and acceptance benchmarks for the migration of legacy client collateral into CuratePDF unified templates.',
+      sections: [
+        {
+          id: 'sow-1',
+          title: 'Scope of Services',
+          content: 'Acme Advisory will convert 24 disparate docx and indd templates into modular CuratePDF definitions, implement custom token palettes, and configure CI/CD generation triggers.'
+        },
+        {
+          id: 'sow-2',
+          title: 'Acceptance Criteria',
+          content: '1. 100% font compliance on all client-facing collateral.\n2. Sub-second live preview response.\n3. Exact page break calculation across dynamic tables.'
+        }
+      ],
+      lineItems: [
+        { id: '1', description: 'Template Architecture & Token Mapping', quantity: 1, rate: 9800 },
+        { id: '2', description: 'QA Testing & Acceptance Verification', quantity: 1, rate: 3400 },
+      ],
+      subtotal: 13200,
+      total: 13200,
+      currency: 'USD',
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  },
+  {
+    id: 'tpl-candidate-dossier',
+    name: 'Executive Candidate Dossier',
+    category: 'recruitment',
+    description: 'Structured candidate profile for executive search and specialist placements, presenting credentials and track record cleanly.',
+    pageCount: 1,
+    previewAccent: '#3A7D5F',
+    defaultData: {
+      title: 'Executive Candidate Profile',
+      referenceNumber: 'CAN-2026-114',
+      category: 'recruitment',
+      status: 'ready',
+      date: '2026-10-22',
+      candidateRole: 'VP of Platform Engineering',
+      recipientName: 'David K. Chen, PhD',
+      candidateExperienceYears: 14,
+      candidateSkills: ['Distributed Systems', 'Cloud Native Architecture', 'Engineering Leadership', 'High-Scale PDF/Media Pipelines', 'Rust & Go'],
+      summary: 'David is a seasoned engineering executive with 14+ years scaling mission-critical document pipelines and developer infrastructure. Previously VP of Infrastructure at CloudLayer, leading a team of 65 engineers.',
+      sections: [
+        {
+          id: 'can-1',
+          title: 'Career Summary & Milestones',
+          content: 'Scaled core ingestion engine from 10k to 5M daily requests while cutting p99 latency to 120ms. Oversaw SOC2 Type II and ISO 27001 certifications across multi-region clusters.'
+        },
+        {
+          id: 'can-2',
+          title: 'Education & Credentials',
+          content: 'Ph.D. in Computer Science, Stanford University (2012)\nB.S. in Electrical Engineering and Computer Science, UC Berkeley (2008)'
+        }
+      ],
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  },
+  {
+    id: 'tpl-certificate-award',
+    name: 'Certificate of Excellence & Completion',
+    category: 'certificates',
+    description: 'Formal landscape certificate with ornate borders, verification hash, and official sign-off areas.',
+    pageCount: 1,
+    previewAccent: '#A7C957',
+    defaultData: {
+      title: 'Certificate of Professional Achievement',
+      referenceNumber: 'CERT-2026-8801',
+      category: 'certificates',
+      status: 'ready',
+      date: '2026-10-29',
+      recipientName: 'Alexandra Morgan',
+      awardTitle: 'Advanced Document Engineering & Automation Specialist',
+      summary: 'For successfully demonstrating exceptional mastery in enterprise PDF generation, responsive document architecture, and scalable design token systems.',
+      pageSize: 'A4',
+      orientation: 'landscape',
+      margin: 'relaxed',
+    }
+  },
+  {
+    id: 'tpl-marketing-brief',
+    name: 'Creative Campaign Brief',
+    category: 'marketing',
+    description: 'High-impact brief for agency campaigns, creative deliverables, messaging pillars, and media schedules.',
+    pageCount: 2,
+    previewAccent: '#3A7D5F',
+    defaultData: {
+      title: 'Q1 Global Product Launch Campaign Brief',
+      referenceNumber: 'MRK-2026-004',
+      category: 'marketing',
+      status: 'draft',
+      date: '2026-10-27',
+      clientCompany: 'CuratePDF Marketing Team',
+      summary: 'Strategy, audience segmentation, and multi-channel asset breakdown for the worldwide launch of CuratePDF 2.0.',
+      sections: [
+        {
+          id: 'mrk-1',
+          title: 'Target Audience & Core Value Proposition',
+          content: 'Primary target: Operations leads, independent agencies, and finance specialists seeking pristine, automated PDFs without manual layout software overhead.'
+        },
+        {
+          id: 'mrk-2',
+          title: 'Key Messaging Framework',
+          content: 'Headline: "Professional PDFs, without the busywork."\nValue Pillars: Consistency, Speed, Zero Manual Formatting, High-Fidelity Rendering.'
+        }
+      ],
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  },
+  {
+    id: 'tpl-service-agreement',
+    name: 'Master Services Agreement (MSA)',
+    category: 'business',
+    description: 'Formal legal contract framework with standard clauses, confidentiality, payment terms, and signature blocks.',
+    pageCount: 2,
+    previewAccent: '#0F3D2E',
+    defaultData: {
+      title: 'Master Professional Services Agreement',
+      referenceNumber: 'AGR-2026-031',
+      category: 'business',
+      status: 'ready',
+      date: '2026-10-18',
+      clientName: 'Julian Sterling',
+      clientCompany: 'Sterling Capital Advisors',
+      clientAddress: '120 Broadway, New York, NY 10271',
+      summary: 'This Master Services Agreement is entered into by and between Acme Advisory Group and Sterling Capital Advisors for ongoing document generation and consulting services.',
+      sections: [
+        {
+          id: 'msa-1',
+          title: '1. Services and Work Orders',
+          content: 'Provider will perform services as described in mutually agreed Statement of Work attachments. Each SOW constitutes a binding commitment under the terms of this Agreement.'
+        },
+        {
+          id: 'msa-2',
+          title: '2. Intellectual Property & Confidentiality',
+          content: 'Client retains all rights, title, and interest in and to all Client Data and branded assets. Provider retains ownership of underlying generic automation engines and algorithms.'
+        }
+      ],
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margin: 'standard',
+    }
+  }
+];
+
+export const INITIAL_DOCUMENTS: DocumentData[] = [
+  {
+    id: 'doc-001',
+    title: 'Acme Enterprise Migration Proposal',
+    referenceNumber: 'PROP-2026-042',
+    templateId: 'tpl-proposal-modern',
+    category: 'business',
+    status: 'ready',
+    createdAt: '2026-10-24T14:32:00Z',
+    updatedAt: '2026-10-28T09:15:00Z',
+    date: '2026-10-28',
+    dueDate: '2026-11-28',
+    clientName: 'Sarah Jenkins',
+    clientCompany: 'Northwind Global Enterprises',
+    clientEmail: 's.jenkins@northwind.io',
+    clientAddress: '450 Lexington Ave, New York, NY 10017',
+    summary: 'Strategic engagement framework to modernize enterprise PDF workflows across Northwind Global business units.',
+    sections: [
+      {
+        id: 's-1',
+        title: 'Executive Summary',
+        content: 'Northwind Global currently incurs excessive administrative hours compiling monthly client reporting books. Acme Advisory will deploy standardized CuratePDF templates to reduce turnaround time by 65%.'
+      },
+      {
+        id: 's-2',
+        title: 'Engagement Phasing',
+        content: 'Phase 1: Architecture review and brand token normalization.\nPhase 2: Template system design and multi-format preview engines.\nPhase 3: Rollout and team enablement.'
+      }
+    ],
+    lineItems: [
+      { id: '1', description: 'Discovery & Workflow Audit', quantity: 1, rate: 8500 },
+      { id: '2', description: 'Template System Design & Engine Setup', quantity: 1, rate: 16500 },
+      { id: '3', description: 'Enterprise Integration & Training', quantity: 1, rate: 7000 },
+    ],
+    subtotal: 32000,
+    total: 32000,
+    currency: 'USD',
+    pageSize: 'A4',
+    orientation: 'portrait',
+    margin: 'standard',
+  },
+  {
+    id: 'doc-002',
+    title: 'Aether Cloud Q3 Retainer Invoice',
+    referenceNumber: 'INV-2026-089',
+    templateId: 'tpl-invoice-minimal',
+    category: 'finance',
+    status: 'generated',
+    createdAt: '2026-10-20T10:00:00Z',
+    updatedAt: '2026-10-25T16:40:00Z',
+    date: '2026-10-25',
+    dueDate: '2026-11-25',
+    clientName: 'Marcus Vance',
+    clientCompany: 'Aether Cloud Technologies',
+    clientEmail: 'accounts@aethercloud.net',
+    clientAddress: '782 Innovation Way, Austin, TX 78701',
+    summary: 'Tax Invoice for October 2026 professional advisory and document automation services.',
+    paymentTerms: 'Payment due within 30 days via ACH transfer.',
+    lineItems: [
+      { id: '1', description: 'Product Design Systems Consulting (October 2026)', quantity: 40, rate: 175 },
+      { id: '2', description: 'PDF Automation Pipeline Implementation', quantity: 1, rate: 4200 },
+      { id: '3', description: 'Dedicated Infrastructure Cloud Provisioning', quantity: 1, rate: 850 },
+    ],
+    subtotal: 12050,
+    taxTotal: 964,
+    total: 13014,
+    currency: 'USD',
+    pageSize: 'A4',
+    orientation: 'portrait',
+    margin: 'standard',
+  },
+  {
+    id: 'doc-003',
+    title: 'Q3 Operations & Velocity Review',
+    referenceNumber: 'REP-2026-Q3',
+    templateId: 'tpl-quarterly-report',
+    category: 'reports',
+    status: 'ready',
+    createdAt: '2026-10-15T11:20:00Z',
+    updatedAt: '2026-10-22T08:30:00Z',
+    date: '2026-10-15',
+    summary: 'Quarterly operations review showing 142k documents generated with sub-second latency.',
+    sections: [
+      {
+        id: 'r-1',
+        title: 'Performance Highlights',
+        content: 'Generation speed reduced to 8.6 seconds average per 50-page complex financial document. Customer satisfaction reached 99.4%.'
+      }
+    ],
+    lineItems: [
+      { id: '1', description: 'Enterprise Documents Generated', quantity: 142000, rate: 0.08 },
+    ],
+    subtotal: 11360,
+    total: 11360,
+    currency: 'USD',
+    pageSize: 'A4',
+    orientation: 'portrait',
+    margin: 'standard',
+  },
+  {
+    id: 'doc-004',
+    title: 'Candidate Dossier — David K. Chen',
+    referenceNumber: 'CAN-2026-114',
+    templateId: 'tpl-candidate-dossier',
+    category: 'recruitment',
+    status: 'draft',
+    createdAt: '2026-10-22T13:10:00Z',
+    updatedAt: '2026-10-26T18:05:00Z',
+    date: '2026-10-22',
+    candidateRole: 'VP of Platform Engineering',
+    recipientName: 'David K. Chen, PhD',
+    candidateExperienceYears: 14,
+    candidateSkills: ['Distributed Systems', 'Cloud Native Architecture', 'Engineering Leadership', 'High-Scale PDF/Media Pipelines'],
+    summary: 'Executive profile prepared for client review regarding the VP of Platform Engineering search.',
+    sections: [
+      {
+        id: 'c-1',
+        title: 'Executive Track Record',
+        content: 'Experienced distributed systems leader with deep focus on reliable document generation, high-throughput cloud APIs, and developer productivity.'
+      }
+    ],
+    pageSize: 'A4',
+    orientation: 'portrait',
+    margin: 'standard',
+  },
+  {
+    id: 'doc-005',
+    title: 'Achievement Award — Alexandra Morgan',
+    referenceNumber: 'CERT-2026-8801',
+    templateId: 'tpl-certificate-award',
+    category: 'certificates',
+    status: 'ready',
+    createdAt: '2026-10-27T09:00:00Z',
+    updatedAt: '2026-10-27T09:45:00Z',
+    date: '2026-10-27',
+    recipientName: 'Alexandra Morgan',
+    awardTitle: 'Advanced Document Engineering Specialist',
+    summary: 'Award of completion for enterprise token-driven design system engineering.',
+    pageSize: 'A4',
+    orientation: 'landscape',
+    margin: 'relaxed',
+  }
+];
+
+// LocalStorage helpers
+const STORAGE_KEYS = {
+  DOCUMENTS: 'curatepdf_documents_v1',
+  TEMPLATES: 'curatepdf_templates_v1',
+  BRAND_KIT: 'curatepdf_brandkit_v1',
+  API_KEYS: 'curatepdf_apikeys_v1',
+};
+
+export const getStoredBrandKit = (): BrandKitConfig => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BRAND_KIT);
+    return raw ? JSON.parse(raw) : DEFAULT_BRAND_KIT;
+  } catch (e) {
+    return DEFAULT_BRAND_KIT;
+  }
+};
+
+export const saveStoredBrandKit = (brandKit: BrandKitConfig): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.BRAND_KIT, JSON.stringify(brandKit));
+  } catch (e) {
+    console.error('Failed to save brand kit to storage', e);
+  }
+};
+
+export const getStoredDocuments = (): DocumentData[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DOCUMENTS);
+    return raw ? JSON.parse(raw) : INITIAL_DOCUMENTS;
+  } catch (e) {
+    return INITIAL_DOCUMENTS;
+  }
+};
+
+export const saveStoredDocuments = (docs: DocumentData[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.DOCUMENTS, JSON.stringify(docs));
+  } catch (e) {
+    console.error('Failed to save documents to storage', e);
+  }
+};
+
+export const getStoredDocumentById = (id: string): DocumentData | undefined => {
+  const docs = getStoredDocuments();
+  return docs.find(d => d.id === id);
+};
+
+export const upsertDocument = (doc: DocumentData): DocumentData[] => {
+  const docs = getStoredDocuments();
+  const index = docs.findIndex(d => d.id === doc.id);
+  let updated: DocumentData[];
+  if (index >= 0) {
+    updated = [...docs];
+    updated[index] = { ...doc, updatedAt: new Date().toISOString() };
+  } else {
+    updated = [doc, ...docs];
+  }
+  saveStoredDocuments(updated);
+  return updated;
+};
+
+export const deleteStoredDocument = (id: string): DocumentData[] => {
+  const docs = getStoredDocuments();
+  const updated = docs.filter(d => d.id !== id);
+  saveStoredDocuments(updated);
+  return updated;
+};
+
+export const getStoredTemplates = (): TemplateDefinition[] => {
+  return INITIAL_TEMPLATES;
+};

@@ -1,0 +1,439 @@
+import React, { useState } from 'react';
+import { useNavigate, NavLink } from 'react-router-dom';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  LayoutGrid, 
+  List, 
+  Edit3, 
+  Trash2, 
+  Copy, 
+  Download, 
+  FileCode, 
+  FileText,
+  MoreVertical,
+  Check,
+  FolderOpen
+} from 'lucide-react';
+import { DocumentData, DocumentCategory, DocumentStatus } from '../../types';
+import { 
+  getStoredDocuments, 
+  saveStoredDocuments, 
+  deleteStoredDocument, 
+  upsertDocument 
+} from '../../utils/storage';
+import { Button } from '../../components/ui/Button';
+import { Input, Select } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
+import { Dialog } from '../../components/ui/Dialog';
+import { EmptyState } from '../../components/ui/Toast';
+
+export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
+  const navigate = useNavigate();
+  const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
+  
+  // Filtering & Sorting State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'updated' | 'title' | 'date'>('updated');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  // Dialog states for Rename & Delete confirmation
+  const [docToRename, setDocToRename] = useState<DocumentData | null>(null);
+  const [newTitle, setNewTitle] = useState('');
+  const [docToDelete, setDocToDelete] = useState<DocumentData | null>(null);
+
+  // Filter logic
+  const filteredDocs = documents.filter(doc => {
+    const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          doc.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (doc.clientCompany && doc.clientCompany.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (doc.clientName && doc.clientName.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
+    const matchesStatus = selectedStatus === 'all' || doc.status === selectedStatus;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  }).sort((a, b) => {
+    if (sortBy === 'title') return a.title.localeCompare(b.title);
+    if (sortBy === 'date') return new Date(b.date).getTime() - new Date(a.date).getTime();
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  // Action handlers
+  const handleDuplicate = (doc: DocumentData) => {
+    const copy: DocumentData = {
+      ...doc,
+      id: `doc-${Date.now().toString(36)}`,
+      title: `${doc.title} (Copy)`,
+      referenceNumber: `${doc.referenceNumber}-COPY`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'draft',
+    };
+    const updated = upsertDocument(copy);
+    setDocuments(updated);
+    if (onShowToast) {
+      onShowToast('Document duplicated', `Created copy of "${doc.title}"`, 'success');
+    }
+  };
+
+  const handleOpenRename = (doc: DocumentData) => {
+    setDocToRename(doc);
+    setNewTitle(doc.title);
+  };
+
+  const handleConfirmRename = () => {
+    if (!docToRename || !newTitle.trim()) return;
+    const updated = upsertDocument({ ...docToRename, title: newTitle.trim() });
+    setDocuments(updated);
+    setDocToRename(null);
+    if (onShowToast) {
+      onShowToast('Document renamed', `Updated title to "${newTitle.trim()}"`, 'success');
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (!docToDelete) return;
+    const updated = deleteStoredDocument(docToDelete.id);
+    setDocuments(updated);
+    setDocToDelete(null);
+    if (onShowToast) {
+      onShowToast('Document deleted', `Removed document from library.`, 'info');
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-ink">Document Library</h1>
+          <p className="text-xs text-slate-500">Manage, search, edit, and export your generated PDF documents</p>
+        </div>
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => navigate('/app/editor')}
+          leftIcon={<Plus className="w-4 h-4" />}
+        >
+          Create document
+        </Button>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="bg-white p-4 rounded-card border border-paper-border shadow-card flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="w-full md:w-72">
+          <Input
+            placeholder="Search documents or clients..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+        </div>
+
+        <div className="w-full md:w-auto flex flex-wrap items-center gap-3">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700"
+          >
+            <option value="all">All Categories</option>
+            <option value="business">Business</option>
+            <option value="finance">Finance</option>
+            <option value="reports">Reports</option>
+            <option value="marketing">Marketing</option>
+            <option value="operations">Operations</option>
+            <option value="certificates">Certificates</option>
+            <option value="recruitment">Recruitment</option>
+          </select>
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700"
+          >
+            <option value="all">All Statuses</option>
+            <option value="ready">Ready</option>
+            <option value="generated">Generated</option>
+            <option value="draft">Draft</option>
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700"
+          >
+            <option value="updated">Recently Updated</option>
+            <option value="date">Issue Date</option>
+            <option value="title">Title (A-Z)</option>
+          </select>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-paper-subtle p-1 rounded-lg border border-paper-border">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
+              title="List View"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Document Listing */}
+      {filteredDocs.length === 0 ? (
+        <EmptyState
+          icon={<FolderOpen className="w-6 h-6" />}
+          title="No documents found"
+          description={
+            searchQuery || selectedCategory !== 'all' || selectedStatus !== 'all'
+              ? 'Try adjusting your search criteria or filters.'
+              : 'Your document library is currently empty. Start by creating a document or choosing a template.'
+          }
+          action={
+            searchQuery || selectedCategory !== 'all' || selectedStatus !== 'all' ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                  setSelectedStatus('all');
+                }}
+              >
+                Clear Filters
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate('/app/editor')}
+                leftIcon={<Plus className="w-4 h-4" />}
+              >
+                Create First Document
+              </Button>
+            )
+          }
+        />
+      ) : viewMode === 'list' ? (
+        /* List View */
+        <div className="bg-white rounded-card border border-paper-border shadow-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-paper-subtle border-b border-paper-border text-slate-500">
+                <tr>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Title & Recipient</th>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Category</th>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Reference</th>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Status</th>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Total</th>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Modified</th>
+                  <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px] text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-paper-border text-slate-700">
+                {filteredDocs.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-paper-subtle/40 transition-colors">
+                    <td className="py-3.5 px-4 font-medium text-ink">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-forest-50 text-forest flex items-center justify-center shrink-0 border border-forest-100">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <NavLink
+                            to={`/app/editor?id=${doc.id}`}
+                            className="font-semibold text-ink hover:text-forest transition-colors block text-sm"
+                          >
+                            {doc.title}
+                          </NavLink>
+                          <span className="text-[11px] text-slate-400">
+                            {doc.clientCompany || doc.clientName || 'Internal Document'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 capitalize">{doc.category}</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-600">{doc.referenceNumber}</td>
+                    <td className="py-3.5 px-4">
+                      <Badge status={doc.status} size="sm" />
+                    </td>
+                    <td className="py-3.5 px-4 font-semibold text-ink">
+                      {doc.total ? `$${doc.total.toLocaleString()}` : '—'}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-400 text-[11px]">
+                      {new Date(doc.updatedAt).toLocaleDateString()}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/app/editor?id=${doc.id}`)}
+                          className="h-8 w-8 text-slate-500 hover:text-forest"
+                          title="Open & Edit"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDuplicate(doc)}
+                          className="h-8 w-8 text-slate-500 hover:text-ink"
+                          title="Duplicate"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenRename(doc)}
+                          className="h-8 w-8 text-slate-500 hover:text-ink text-[11px]"
+                          title="Rename"
+                        >
+                          RN
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDocToDelete(doc)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* Grid View */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredDocs.map((doc) => (
+            <div
+              key={doc.id}
+              className="bg-white rounded-card border border-paper-border p-5 shadow-card hover:shadow-card-hover transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <Badge status={doc.status} size="sm" />
+                  <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase">
+                    {doc.pageSize} • {doc.category}
+                  </span>
+                </div>
+
+                <NavLink
+                  to={`/app/editor?id=${doc.id}`}
+                  className="font-display font-bold text-base text-ink hover:text-forest transition-colors block leading-tight"
+                >
+                  {doc.title}
+                </NavLink>
+
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  {doc.summary || `${doc.referenceNumber} prepared for ${doc.clientCompany || 'Internal'}`}
+                </p>
+
+                {doc.total && (
+                  <div className="mt-4 pt-3 border-t border-paper-border flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Document Total</span>
+                    <span className="font-bold text-forest font-mono text-sm">${doc.total.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-paper-border flex items-center justify-between">
+                <span className="text-[11px] text-slate-400">
+                  {new Date(doc.updatedAt).toLocaleDateString()}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDuplicate(doc)}
+                    className="h-7 w-7 text-slate-500"
+                    title="Duplicate"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/app/editor?id=${doc.id}`)}
+                    className="h-7 px-2.5 text-xs text-forest"
+                  >
+                    Edit & Export
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Rename Document Dialog */}
+      <Dialog
+        isOpen={!!docToRename}
+        onClose={() => setDocToRename(null)}
+        title="Rename Document"
+        description="Enter a new display title for this document."
+        footer={
+          <>
+            <Button variant="secondary" size="sm" onClick={() => setDocToRename(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleConfirmRename}>
+              Save Name
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <Input
+            label="Document Title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            autoFocus
+          />
+        </div>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        isOpen={!!docToDelete}
+        onClose={() => setDocToDelete(null)}
+        title="Delete Document"
+        description="Are you sure you want to delete this document? This action cannot be undone."
+        footer={
+          <>
+            <Button variant="secondary" size="sm" onClick={() => setDocToDelete(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleConfirmDelete}>
+              Delete Document
+            </Button>
+          </>
+        }
+      >
+        {docToDelete && (
+          <div className="p-3 bg-red-50 text-red-800 rounded-lg text-xs">
+            <strong>"{docToDelete.title}"</strong> ({docToDelete.referenceNumber}) will be permanently removed.
+          </div>
+        )}
+      </Dialog>
+    </div>
+  );
+};
