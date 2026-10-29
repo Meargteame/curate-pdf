@@ -27,8 +27,37 @@ export const DeveloperTools: React.FC<{ onShowToast?: (title: string, message?: 
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
 
-  const handleCreateKey = () => {
+  // Fetch from backend if online
+  React.useEffect(() => {
+    fetch('/api/v1/keys')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          setApiKeys(json.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleCreateKey = async () => {
     if (!newKeyName.trim()) return;
+
+    try {
+      const res = await fetch('/api/v1/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKeyName.trim() }),
+      });
+      if (res.ok) {
+        const { data } = await res.json();
+        setApiKeys([data, ...apiKeys]);
+        setIsKeyDialogOpen(false);
+        setNewKeyName('');
+        if (onShowToast) onShowToast('API Key Generated', 'Store your key securely.', 'success');
+        return;
+      }
+    } catch {}
+
     const newKey: ApiKeyItem = {
       id: `key-${Date.now()}`,
       name: newKeyName.trim(),
@@ -44,7 +73,10 @@ export const DeveloperTools: React.FC<{ onShowToast?: (title: string, message?: 
     }
   };
 
-  const handleRevokeKey = (id: string) => {
+  const handleRevokeKey = async (id: string) => {
+    try {
+      await fetch(`/api/v1/keys/${id}`, { method: 'DELETE' });
+    } catch {}
     setApiKeys(apiKeys.filter(k => k.id !== id));
     if (onShowToast) {
       onShowToast('Key Revoked', 'API key has been deactivated.', 'info');

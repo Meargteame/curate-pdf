@@ -196,6 +196,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
         fileName,
         pageSize: doc.pageSize,
         orientation: doc.orientation,
+        documentData: doc,
       });
 
       if (success) {
