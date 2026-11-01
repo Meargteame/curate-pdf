@@ -30,6 +30,8 @@ import { Button } from '../../components/ui/Button';
 import { Input, Textarea, Select } from '../../components/ui/Input';
 import { Tabs } from '../../components/ui/Toast';
 import { Badge } from '../../components/ui/Badge';
+import { Dialog } from '../../components/ui/Dialog';
+import { Upload } from 'lucide-react';
 
 export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
   const [searchParams] = useSearchParams();
@@ -93,6 +95,90 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [zoom, setZoom] = useState<number>(0.85);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState<boolean>(false);
+
+  // Template Switching & Blank Document
+  const handleSwitchTemplate = (tplId: string) => {
+    const matched = templates.find(t => t.id === tplId);
+    if (!matched) return;
+    setDoc(prev => ({
+      ...prev,
+      templateId: matched.id,
+      category: matched.category,
+      title: prev.title || matched.defaultData.title || matched.name,
+      referenceNumber: prev.referenceNumber || matched.defaultData.referenceNumber || `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
+      sections: matched.defaultData.sections || prev.sections,
+      lineItems: matched.defaultData.lineItems || prev.lineItems,
+      subtotal: matched.defaultData.subtotal || prev.subtotal,
+      total: matched.defaultData.total || prev.total,
+      pageSize: matched.defaultData.pageSize || prev.pageSize,
+      orientation: matched.defaultData.orientation || prev.orientation,
+    }));
+    setIsTemplatePickerOpen(false);
+    if (onShowToast) {
+      onShowToast('Template Applied', `Switched layout to "${matched.name}".`, 'info');
+    }
+  };
+
+  const handleStartBlank = () => {
+    setDoc(prev => ({
+      ...prev,
+      title: 'Untitled Document',
+      referenceNumber: `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
+      summary: '',
+      clientName: '',
+      clientCompany: '',
+      clientEmail: '',
+      clientAddress: '',
+      sections: [{ id: '1', title: 'Main Section', content: 'Type your custom content here...' }],
+      lineItems: [],
+      subtotal: 0,
+      total: 0,
+      status: 'draft',
+    }));
+    setIsTemplatePickerOpen(false);
+    if (onShowToast) {
+      onShowToast('Blank Document', 'Cleared sections to start from scratch.', 'info');
+    }
+  };
+
+  // Export & Import Document Schema (JSON)
+  const handleExportJson = () => {
+    const dataStr = JSON.stringify(doc, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(doc.title || 'document').toLowerCase().replace(/[^a-z0-9]/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    if (onShowToast) {
+      onShowToast('JSON Exported', 'Document data downloaded as JSON.', 'success');
+    }
+  };
+
+  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed && parsed.title) {
+          setDoc(parsed);
+          if (onShowToast) {
+            onShowToast('Document Imported', `Loaded "${parsed.title}".`, 'success');
+          }
+        }
+      } catch {
+        if (onShowToast) {
+          onShowToast('Import Failed', 'Selected file is not valid document JSON.', 'error');
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
 
   // Recalculate totals whenever lineItems change
   useEffect(() => {
@@ -242,9 +328,17 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               />
               <Badge status={doc.status} size="sm" className="hidden md:inline-flex" />
             </div>
-            <p className="text-[11px] text-slate-400 pl-1.5 font-mono">
-              {doc.referenceNumber} • {doc.category}
-            </p>
+            <div className="flex items-center gap-2 pl-1.5">
+              <span className="text-[11px] text-slate-400 font-mono">
+                {doc.referenceNumber} • {doc.category}
+              </span>
+              <button
+                onClick={() => setIsTemplatePickerOpen(true)}
+                className="text-[11px] font-semibold text-forest hover:underline"
+              >
+                Change Layout
+              </button>
+            </div>
           </div>
         </div>
 
@@ -680,6 +774,34 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                 />
               </div>
 
+              <div className="space-y-3 pt-4 border-t border-paper-border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Schema Portability
+                </h4>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportJson}
+                    leftIcon={<Download className="w-3.5 h-3.5 text-forest" />}
+                    className="text-xs flex-1"
+                  >
+                    Export JSON
+                  </Button>
+                  <label className="flex-1">
+                    <span className="inline-flex items-center justify-center w-full h-8 px-3 text-xs rounded-md font-medium border border-paper-border hover:bg-paper-warm text-ink cursor-pointer">
+                      <Upload className="w-3.5 h-3.5 mr-1.5 text-forest" /> Import JSON
+                    </span>
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={handleImportJson}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div className="p-4 rounded-lg bg-forest-50 border border-forest-200 text-xs space-y-2">
                 <div className="flex items-center gap-1.5 font-bold text-forest">
                   <Sparkles className="w-4 h-4 text-sage" />
@@ -741,6 +863,51 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
           </div>
         </div>
       </div>
+
+      {/* Starting Point / Change Layout Modal */}
+      <Dialog
+        isOpen={isTemplatePickerOpen}
+        onClose={() => setIsTemplatePickerOpen(false)}
+        title="Choose a Starting Point"
+        description="Select a structured template layout or start with a clean document."
+        maxWidth="2xl"
+        footer={
+          <Button variant="secondary" size="sm" onClick={() => setIsTemplatePickerOpen(false)}>
+            Close
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="p-3 rounded-lg border border-dashed border-paper-border hover:border-forest/50 bg-paper-subtle/50 flex items-center justify-between transition-colors">
+            <div>
+              <h4 className="font-display font-bold text-sm text-ink">Blank Document</h4>
+              <p className="text-xs text-slate-500">Start with minimal fields and build your document from scratch</p>
+            </div>
+            <Button variant="primary" size="sm" onClick={handleStartBlank}>
+              Start Blank
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {templates.map((tpl) => (
+              <div
+                key={tpl.id}
+                onClick={() => handleSwitchTemplate(tpl.id)}
+                className="p-3.5 rounded-lg border border-paper-border hover:border-forest hover:bg-forest-50/20 cursor-pointer transition-all space-y-1.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-forest font-display bg-forest-50 px-2 py-0.5 rounded border border-forest-100">
+                    {tpl.category}
+                  </span>
+                  <span className="text-[11px] font-semibold text-forest hover:underline">Apply</span>
+                </div>
+                <h5 className="font-display font-bold text-xs text-ink">{tpl.name}</h5>
+                <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{tpl.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };

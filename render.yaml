@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: curatepdf
+    runtime: docker
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - key: APP_DOMAIN
+        value: curatepdf.site

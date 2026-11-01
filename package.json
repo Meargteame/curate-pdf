@@ -8,6 +8,7 @@
     "server": "tsx server/index.ts",
     "dev:all": "concurrently -k -p \"[{name}]\" -n \"APP,API\" -c \"cyan,magenta\" \"vite\" \"tsx server/index.ts\"",
     "build": "tsc -b && vite build",
+    "start": "tsx server/index.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },

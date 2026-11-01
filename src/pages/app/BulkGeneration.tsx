@@ -27,15 +27,88 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
   const [progress, setProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
-  // Sample batch records
-  const sampleRecords = [
+  // Batch records state (supports sample or user-uploaded CSV)
+  const defaultSampleRecords = [
     { client: 'Acme Logistics Ltd', reference: 'INV-2026-901', amount: '$4,200.00', date: '2026-10-28', status: 'Valid' },
     { client: 'Apex Biotech Inc', reference: 'INV-2026-902', amount: '$8,150.00', date: '2026-10-28', status: 'Valid' },
     { client: 'Vertex Media Lab', reference: 'INV-2026-903', amount: '$2,780.00', date: '2026-10-29', status: 'Valid' },
     { client: 'Solstice Capital', reference: 'INV-2026-904', amount: '$15,400.00', date: '2026-10-29', status: 'Valid' },
     { client: 'Meridian Partners', reference: 'INV-2026-905', amount: '$6,900.00', date: '2026-10-30', status: 'Valid' },
   ];
+  const [records, setRecords] = useState<Array<Record<string, any>>>(defaultSampleRecords);
+
+  // Parse CSV text into records array
+  const parseCsvText = (csv: string) => {
+    const lines = csv.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+    const parsedRecords: Array<Record<string, any>> = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      // Regex handling commas inside quotation marks
+      const matches = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+      const row = matches.map(val => val.trim().replace(/^["']|["']$/g, ''));
+      if (row.length === 0 || row.every(val => !val)) continue;
+
+      const record: Record<string, any> = {};
+      headers.forEach((header, colIdx) => {
+        record[header] = row[colIdx] || '';
+      });
+
+      // Normalize common column names
+      if (!record.client && record.name) record.client = record.name;
+      if (!record.client && record.company) record.client = record.company;
+      if (!record.reference) record.reference = `DOC-${Math.floor(1000 + Math.random() * 9000)}`;
+      if (!record.date) record.date = new Date().toISOString().split('T')[0];
+      record.status = 'Valid';
+
+      parsedRecords.push(record);
+    }
+    return parsedRecords;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const parsed = parseCsvText(text);
+      if (parsed.length > 0) {
+        setRecords(parsed);
+        if (onShowToast) {
+          onShowToast('CSV Parsed', `Successfully imported ${parsed.length} rows from ${file.name}.`, 'success');
+        }
+      } else {
+        if (onShowToast) {
+          onShowToast('Import Warning', 'Could not parse records. Falling back to default format.', 'error');
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadSampleCsv = () => {
+    const sampleCsv = `client,reference,amount,date,email,summary
+"Acme Logistics Ltd","INV-2026-901","$4,200.00","2026-10-28","contact@acme.example","Supply chain modernization deliverables"
+"Apex Biotech Inc","INV-2026-902","$8,150.00","2026-10-28","billing@apex.example","Clinical trials data infrastructure"
+"Vertex Media Lab","INV-2026-903","$2,780.00","2026-10-29","accounts@vertex.example","Brand design system rollout"
+"Solstice Capital","INV-2026-904","$15,400.00","2026-10-29","ops@solstice.example","Quarterly portfolio review statement"
+"Meridian Partners","INV-2026-905","$6,900.00","2026-10-30","finance@meridian.example","Corporate governance retainer"`;
+    
+    const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'curatepdf_sample_batch.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleStartBatch = async () => {
     setIsProcessing(true);
@@ -49,7 +122,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateId: selectedTemplateId,
-          records: sampleRecords,
+          records: records,
         }),
       });
 
@@ -79,7 +152,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
                   });
                 } catch {}
                 if (onShowToast) {
-                  onShowToast('Batch Completed', '5 server-rendered PDFs ready for download.', 'success');
+                  onShowToast('Batch Completed', `${records.length} server-rendered PDFs ready for download.`, 'success');
                 }
               } else if (data.status === 'failed') {
                 clearInterval(pollInterval);
@@ -116,7 +189,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
           });
         } catch {}
         if (onShowToast) {
-          onShowToast('Batch Completed', 'Successfully generated 5 PDF documents.', 'success');
+          onShowToast('Batch Completed', `Successfully generated ${records.length} PDF documents.`, 'success');
         }
       }
     }, 600);
@@ -213,28 +286,65 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
 
         {step === 2 && (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-base font-display font-bold text-ink">Step 2: Upload CSV or Select Sample Data</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Upload a structured file with rows corresponding to each recipient document.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-display font-bold text-ink">Step 2: Upload CSV or Select Sample Data</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Upload a structured file with rows corresponding to each recipient document.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadSampleCsv}
+                leftIcon={<Download className="w-3.5 h-3.5 text-forest" />}
+                className="text-xs shrink-0"
+              >
+                Download Sample CSV
+              </Button>
             </div>
 
-            {/* Dropzone mockup */}
-            <div className="border-2 border-dashed border-paper-border rounded-xl p-8 text-center bg-paper-subtle/50 space-y-3">
+            {/* Dropzone with real file input */}
+            <div className="relative border-2 border-dashed border-paper-border rounded-xl p-8 text-center bg-paper-subtle/50 space-y-3 hover:border-forest/50 transition-colors">
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleFileUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                title="Upload CSV File"
+              />
               <div className="w-12 h-12 rounded-full bg-forest-50 text-forest mx-auto flex items-center justify-center">
                 <FileSpreadsheet className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-ink">Click to upload CSV or drag and drop</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">UTF-8 CSV, XLSX, or JSON (Up to 5,000 rows)</p>
+                <p className="text-sm font-semibold text-ink">
+                  {uploadedFileName ? `Selected: ${uploadedFileName}` : 'Click to browse or drag & drop CSV'}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Standard CSV with headers (client, reference, amount, date, email). Up to 5,000 rows.
+                </p>
               </div>
-              <div className="pt-2">
-                <Button variant="secondary" size="sm">
-                  Load Pre-filled 5-Record Sample Batch
+              <div className="pt-2 flex items-center justify-center gap-3 relative z-20">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setRecords(defaultSampleRecords);
+                    setUploadedFileName(null);
+                    if (onShowToast) onShowToast('Sample Loaded', 'Loaded 5 sample corporate invoice records.', 'info');
+                  }}
+                >
+                  Reset to 5-Record Sample Batch
                 </Button>
               </div>
             </div>
+
+            {uploadedFileName && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center justify-between">
+                <span><strong>{uploadedFileName}</strong> loaded ({records.length} records parsed)</span>
+                <span className="font-semibold text-emerald-700">Ready for verification</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between pt-4 border-t border-paper-border">
               <Button variant="secondary" size="sm" onClick={() => setStep(1)}>
@@ -246,7 +356,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
                 onClick={() => setStep(3)}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                Proceed to Verification
+                Proceed to Verification ({records.length} records)
               </Button>
             </div>
           </div>
@@ -257,14 +367,14 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
             <div>
               <h3 className="text-base font-display font-bold text-ink">Step 3: Verify Records & Field Mapping</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Review the 5 parsed rows and confirm schema mapping before executing the generation engine.
+                Review the {records.length} parsed rows and confirm schema mapping before executing the generation engine.
               </p>
             </div>
 
             {/* Records Table */}
-            <div className="rounded-lg border border-paper-border overflow-hidden">
+            <div className="rounded-lg border border-paper-border overflow-hidden max-h-96 overflow-y-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-paper-subtle text-slate-500 font-semibold border-b border-paper-border">
+                <thead className="bg-paper-subtle text-slate-500 font-semibold border-b border-paper-border sticky top-0">
                   <tr>
                     <th className="py-2.5 px-3">#</th>
                     <th className="py-2.5 px-3">Client Entity</th>
@@ -275,13 +385,13 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-paper-border">
-                  {sampleRecords.map((rec, i) => (
+                  {records.map((rec, i) => (
                     <tr key={i} className="hover:bg-slate-50">
                       <td className="py-2.5 px-3 font-mono text-slate-400">{i + 1}</td>
-                      <td className="py-2.5 px-3 font-semibold text-ink">{rec.client}</td>
-                      <td className="py-2.5 px-3 font-mono text-slate-600">{rec.reference}</td>
-                      <td className="py-2.5 px-3 font-semibold text-forest">{rec.amount}</td>
-                      <td className="py-2.5 px-3 text-slate-500">{rec.date}</td>
+                      <td className="py-2.5 px-3 font-semibold text-ink">{rec.client || rec.name || 'Recipient'}</td>
+                      <td className="py-2.5 px-3 font-mono text-slate-600">{rec.reference || `REF-${i + 1}`}</td>
+                      <td className="py-2.5 px-3 font-semibold text-forest">{rec.amount || '$1,000.00'}</td>
+                      <td className="py-2.5 px-3 text-slate-500">{rec.date || '2026-10-30'}</td>
                       <td className="py-2.5 px-3">
                         <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
                           <CheckCircle className="w-3 h-3" /> Valid
@@ -321,7 +431,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
               <p className="text-xs text-slate-500 mt-1">
                 {isProcessing
                   ? 'Assembling vectors, rendering fonts, and compiling output archive...'
-                  : 'All 5 documents have been generated and packaged.'}
+                  : `All ${records.length} documents have been generated and packaged.`}
               </p>
             </div>
 
@@ -335,7 +445,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
               </div>
               <div className="flex justify-between text-xs text-slate-400 font-mono">
                 <span>{progress}% complete</span>
-                <span>{Math.round((progress / 100) * 5)} / 5 documents</span>
+                <span>{Math.round((progress / 100) * records.length)} / {records.length} documents</span>
               </div>
             </div>
 
