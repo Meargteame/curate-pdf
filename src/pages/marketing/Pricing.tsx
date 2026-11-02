@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, HelpCircle, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { Check, ArrowRight, ChevronDown, ShieldCheck, MessageSquare } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { getStoredUserProfile, saveStoredUserProfile } from '../../utils/storage';
 
@@ -197,44 +197,78 @@ export const Pricing: React.FC = () => {
         ))}
       </div>
 
-      {/* Interactive FAQ Accordion */}
-      <div className="max-w-3xl mx-auto space-y-6 pt-12">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-display font-bold text-ink">Frequently Asked Questions</h2>
-          <p className="text-xs text-slate-500">Everything you need to know about our plans and technology</p>
-        </div>
+      {/* Redesigned 2-Column FAQ Section */}
+      <div className="pt-16 border-t border-paper-border">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+          {/* Left Column: Context & Support Card */}
+          <div className="lg:col-span-4 space-y-6 text-left">
+            <div className="space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                FAQ & Clarifications
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink tracking-tight">
+                Frequently asked questions
+              </h2>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Clear answers about client-side vector compilation, enterprise brand kits, commercial licensing, and developer REST APIs.
+              </p>
+            </div>
 
-        <div className="space-y-3">
-          {faqs.map((faq, i) => {
-            const isOpen = openFaqIndex === i;
-            return (
-              <div
-                key={i}
-                className="bg-white rounded-xl border border-paper-border shadow-2xs overflow-hidden transition-all"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaqIndex(isOpen ? null : i)}
-                  className="w-full p-4.5 text-left flex items-center justify-between gap-4 hover:bg-slate-50/50"
-                >
-                  <span className="text-sm font-display font-bold text-ink flex items-center gap-2.5">
-                    <HelpCircle className="w-4 h-4 text-forest shrink-0" />
-                    <span>{faq.q}</span>
-                  </span>
-                  {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
-                  )}
-                </button>
-                {isOpen && (
-                  <div className="px-5 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-paper-subtle/30">
-                    {faq.a}
-                  </div>
-                )}
+            {/* Enterprise Support Callout */}
+            <div className="bg-forest-50/70 p-5 rounded-2xl border border-forest-100/80 space-y-3">
+              <div className="flex items-center gap-2 text-forest font-bold text-xs">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Enterprise Custom Terms</span>
               </div>
-            );
-          })}
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Need volume licensing, custom on-premise deployments, or custom vector template design for your team?
+              </p>
+              <button
+                type="button"
+                onClick={() => alert('Enterprise sales inquiries: sales@curatepdf.site')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:text-forest-900 transition-colors cursor-pointer"
+              >
+                <span>Talk to enterprise sales</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: Unified Sleek Accordion */}
+          <div className="lg:col-span-8">
+            <div className="bg-white rounded-2xl border border-paper-border shadow-card divide-y divide-paper-border overflow-hidden">
+              {faqs.map((faq, i) => {
+                const isOpen = openFaqIndex === i;
+                return (
+                  <div key={i} className="transition-colors hover:bg-slate-50/40">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : i)}
+                      className="w-full py-5 px-6 sm:px-8 text-left flex items-center justify-between gap-4 cursor-pointer select-none"
+                    >
+                      <span className={`text-base font-display font-semibold transition-colors ${
+                        isOpen ? 'text-forest' : 'text-ink'
+                      }`}>
+                        {faq.q}
+                      </span>
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-200 ${
+                        isOpen 
+                          ? 'bg-forest text-white border-forest rotate-180 shadow-2xs' 
+                          : 'bg-paper-subtle text-slate-500 border-paper-border hover:border-slate-300'
+                      }`}>
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-6 sm:px-8 pb-6 text-sm text-slate-600 leading-relaxed">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
