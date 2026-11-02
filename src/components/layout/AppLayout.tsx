@@ -254,21 +254,21 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
+      <div className="flex-1 min-w-0 lg:pl-64 flex flex-col min-h-screen overflow-x-hidden">
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-paper-border sticky top-0 z-30 flex items-center justify-between px-4 sm:px-8">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-paper-warm"
+              className="lg:hidden p-1.5 sm:p-2 rounded-lg text-slate-600 hover:bg-paper-warm"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <NavLink to="/app" className="hover:text-forest transition-colors">Workspace</NavLink>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-              <span className="font-semibold text-ink font-display">{getPageTitle()}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500">
+              <NavLink to="/app" className="hover:text-forest transition-colors hidden xs:inline">Workspace</NavLink>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-300 hidden xs:inline" />
+              <span className="font-semibold text-ink font-display truncate max-w-[110px] xs:max-w-[180px] sm:max-w-none">{getPageTitle()}</span>
             </div>
           </div>
 
@@ -287,7 +287,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </button>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="md:hidden p-1.5 rounded-lg text-slate-500 hover:text-ink hover:bg-paper-warm"
+              aria-label="Quick search"
+              title="Search (⌘K)"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <Button
               variant="outline"
               size="sm"
@@ -300,11 +308,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <Button
               variant="primary"
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 px-2.5 sm:px-3"
               onClick={() => navigate('/app/editor')}
               leftIcon={<Plus className="w-3.5 h-3.5" />}
             >
-              New PDF
+              <span className="hidden xs:inline">New </span>PDF
             </Button>
             
             <div className="h-5 w-px bg-paper-border hidden sm:block" />
@@ -371,7 +379,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         </header>
 
         {/* Main Routed Page Content */}
-        <main className={cn("flex-1", isEditor ? "h-[calc(100vh-4rem)] overflow-hidden p-0" : "p-4 sm:p-8")}>
+        <main className={cn("flex-1 min-w-0 w-full max-w-full", isEditor ? "h-[calc(100vh-4rem)] overflow-hidden p-0" : "p-4 sm:p-8")}>
           <Outlet />
         </main>
       </div>

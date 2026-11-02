@@ -220,7 +220,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
       </div>
 
       {/* Stepper Header */}
-      <div className="bg-white p-4 rounded-card border border-paper-border shadow-card flex items-center justify-between text-xs font-semibold">
+      <div className="bg-white p-3 sm:p-4 rounded-card border border-paper-border shadow-card flex items-center justify-between text-xs font-semibold overflow-x-auto">
         {[
           { num: 1, label: 'Choose Template' },
           { num: 2, label: 'Import Records' },
@@ -228,21 +228,22 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
           { num: 4, label: 'Generate & Export' },
         ].map((s, idx) => (
           <React.Fragment key={s.num}>
-            {idx > 0 && <div className="h-px w-8 bg-paper-border hidden sm:block" />}
+            {idx > 0 && <div className="h-px w-3 sm:w-8 bg-paper-border shrink-0" />}
             <button
               type="button"
               disabled={isProcessing}
               onClick={() => setStep(s.num as any)}
-              className={`flex items-center gap-2 transition-colors cursor-pointer disabled:cursor-not-allowed ${
+              className={`flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer disabled:cursor-not-allowed shrink-0 ${
                 step === s.num ? 'text-forest font-bold' : step > s.num ? 'text-slate-700 hover:text-forest' : 'text-slate-400'
               }`}
             >
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono ${
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono shrink-0 ${
                 step === s.num ? 'bg-forest text-white shadow-xs' : step > s.num ? 'bg-forest-100 text-forest font-bold' : 'bg-slate-100 text-slate-400'
               }`}>
                 {step > s.num ? '✓' : s.num}
               </span>
-              <span>{s.label}</span>
+              <span className="hidden sm:inline">{s.label}</span>
+              <span className="inline sm:hidden text-[11px]">{step === s.num ? s.label.split(' ')[0] : ''}</span>
             </button>
           </React.Fragment>
         ))}
@@ -380,8 +381,8 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
             </div>
 
             {/* Records Table */}
-            <div className="rounded-lg border border-paper-border overflow-hidden max-h-96 overflow-y-auto">
-              <table className="w-full text-left text-xs">
+            <div className="rounded-lg border border-paper-border overflow-x-auto max-h-96 overflow-y-auto">
+              <table className="w-full min-w-[540px] text-left text-xs">
                 <thead className="bg-paper-subtle text-slate-500 font-semibold border-b border-paper-border sticky top-0">
                   <tr>
                     <th className="py-2.5 px-3">#</th>
@@ -411,16 +412,17 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
               </table>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-paper-border">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-paper-border">
               <Button variant="secondary" size="sm" onClick={() => setStep(2)}>
                 Back
               </Button>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="md"
                   onClick={() => setIsPreviewModalOpen(true)}
                   leftIcon={<Eye className="w-4 h-4 text-forest" />}
+                  className="flex-1 sm:flex-none justify-center"
                 >
                   Preview Row #1
                 </Button>
@@ -432,6 +434,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
                     handleStartBatch();
                   }}
                   leftIcon={<Play className="w-4 h-4" />}
+                  className="flex-1 sm:flex-none justify-center"
                 >
                   Execute Batch Generation
                 </Button>

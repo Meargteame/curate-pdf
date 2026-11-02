@@ -17,6 +17,13 @@ import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
 export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
   const [brandKit, setBrandKit] = useState<BrandKitConfig>(() => getStoredBrandKit());
   const [isSaving, setIsSaving] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Dynamic fetch from server API
   React.useEffect(() => {
@@ -127,7 +134,7 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
               placeholder="e.g. Strategic Management & Technology Consulting"
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Primary Contact Email"
                 value={brandKit.email}
@@ -140,7 +147,7 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Website URL"
                 value={brandKit.website}
@@ -362,11 +369,11 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
             <span className="text-[11px] text-slate-400">Live preview of your brand tokens</span>
           </div>
 
-          <div className="bg-paper-subtle/70 p-6 rounded-card border border-paper-border overflow-hidden flex justify-center">
+          <div className="bg-paper-subtle/70 p-3 sm:p-6 rounded-card border border-paper-border overflow-hidden flex justify-center">
             <LivePDFCanvas
               document={sampleDoc}
               brandKit={brandKit}
-              zoom={0.65}
+              zoom={isMobile ? 0.40 : 0.65}
             />
           </div>
         </div>

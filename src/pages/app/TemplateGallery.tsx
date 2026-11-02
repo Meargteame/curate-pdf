@@ -25,6 +25,13 @@ export const TemplateGallery: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [previewTemplate, setPreviewTemplate] = useState<TemplateDefinition | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const categories: Array<{ id: string; label: string }> = [
     { id: 'all', label: 'All Templates' },
@@ -210,7 +217,7 @@ export const TemplateGallery: React.FC = () => {
             </p>
 
             {/* Embedded Live Preview Canvas of this template */}
-            <div className="bg-paper-subtle p-6 rounded-lg border border-paper-border flex justify-center overflow-auto max-h-[60vh]">
+            <div className="bg-paper-subtle p-2 sm:p-6 rounded-lg border border-paper-border flex justify-center overflow-auto max-h-[65vh]">
               <LivePDFCanvas
                 document={{
                   id: 'preview-modal-doc',
@@ -241,7 +248,7 @@ export const TemplateGallery: React.FC = () => {
                   margin: previewTemplate.defaultData.margin || 'standard',
                 }}
                 brandKit={brandKit}
-                zoom={0.7}
+                zoom={isMobile ? 0.40 : 0.70}
               />
             </div>
           </div>

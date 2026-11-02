@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { 
   ArrowRight, 
@@ -27,8 +27,15 @@ export const Home: React.FC = () => {
 
   // Selected preview doc in hero
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const heroDocuments = INITIAL_DOCUMENTS;
   const currentHeroDoc = heroDocuments[selectedHeroIndex] || heroDocuments[0];
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="space-y-24 pb-20 relative overflow-hidden">
@@ -142,7 +149,7 @@ export const Home: React.FC = () => {
                 <LivePDFCanvas
                   document={currentHeroDoc}
                   brandKit={brandKit}
-                  zoom={0.56}
+                  zoom={isMobile ? 0.38 : 0.56}
                 />
               </div>
             </div>

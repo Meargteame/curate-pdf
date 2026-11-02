@@ -38,22 +38,36 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
 
   return (
     <div 
-      className={cn("transition-transform duration-150 origin-top flex flex-col items-center", className)}
-      style={{ transform: `scale(${zoom})` }}
+      className={cn("transition-all duration-150 relative shrink-0 overflow-hidden", className)}
+      style={{ 
+        width: `${baseWidth * zoom}px`,
+        height: `${minHeight * zoom}px`,
+      }}
     >
-      {/* Page 1 Canvas */}
       <div
-        id={id}
-        className={cn(
-          "bg-white text-ink shadow-sheet border border-slate-200/80 rounded-sm relative flex flex-col justify-between print-page",
-          doc.margin === 'compact' ? 'p-8 sm:p-10' : doc.margin === 'relaxed' ? 'p-14 sm:p-16' : 'p-10 sm:p-12'
-        )}
         style={{
+          transform: `scale(${zoom})`,
+          transformOrigin: 'top left',
           width: `${baseWidth}px`,
           minHeight: `${minHeight}px`,
-          boxSizing: 'border-box',
+          position: 'absolute',
+          top: 0,
+          left: 0,
         }}
       >
+        {/* Page 1 Canvas */}
+        <div
+          id={id}
+          className={cn(
+            "bg-white text-ink shadow-sheet border border-slate-200/80 rounded-sm relative flex flex-col justify-between print-page",
+            doc.margin === 'compact' ? 'p-8 sm:p-10' : doc.margin === 'relaxed' ? 'p-14 sm:p-16' : 'p-10 sm:p-12'
+          )}
+          style={{
+            width: `${baseWidth}px`,
+            minHeight: `${minHeight}px`,
+            boxSizing: 'border-box',
+          }}
+        >
         {/* Top Decorative Brand Accent Strip */}
         <div 
           className="absolute top-0 left-0 right-0 h-1.5" 
@@ -306,5 +320,6 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

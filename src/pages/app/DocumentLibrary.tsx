@@ -55,7 +55,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'updated' | 'title' | 'date'>('updated');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => typeof window !== 'undefined' && window.innerWidth < 640 ? 'grid' : 'list');
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
 
   // Dialog states for Rename & Delete confirmation
@@ -221,6 +221,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           size="md"
           onClick={() => navigate('/app/editor')}
           leftIcon={<Plus className="w-4 h-4" />}
+          className="w-full sm:w-auto justify-center"
         >
           Create document
         </Button>
@@ -264,11 +265,11 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           />
         </div>
 
-        <div className="w-full md:w-auto flex flex-wrap items-center gap-3">
+        <div className="w-full md:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700"
+            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
           >
             <option value="all">All Categories</option>
             <option value="business">Business</option>
@@ -283,7 +284,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700"
+            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
           >
             <option value="all">All Statuses</option>
             <option value="ready">Ready</option>
@@ -294,7 +295,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700"
+            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
           >
             <option value="updated">Recently Updated</option>
             <option value="date">Issue Date</option>
@@ -302,17 +303,17 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           </select>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center bg-paper-subtle p-1 rounded-lg border border-paper-border">
+          <div className="flex items-center justify-center bg-paper-subtle p-1 rounded-lg border border-paper-border w-full sm:w-auto">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
+              className={`flex-1 sm:flex-none p-1.5 rounded flex items-center justify-center ${viewMode === 'list' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
               title="List View"
             >
               <List className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
+              className={`flex-1 sm:flex-none p-1.5 rounded flex items-center justify-center ${viewMode === 'grid' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
               title="Grid View"
             >
               <LayoutGrid className="w-4 h-4" />
@@ -630,11 +631,11 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
 
       {/* Floating Bulk Action Bar */}
       {selectedDocIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <span className="text-xs font-semibold">
-            {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} selected
+        <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-white px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-150 max-w-[calc(100vw-1.5rem)] w-max flex-wrap sm:flex-nowrap justify-center">
+          <span className="text-xs font-semibold whitespace-nowrap">
+            {selectedDocIds.length} doc{selectedDocIds.length > 1 ? 's' : ''} selected
           </span>
-          <div className="h-4 w-px bg-slate-700" />
+          <div className="h-4 w-px bg-slate-700 hidden sm:block" />
           <Button
             variant="outline"
             size="sm"
@@ -642,7 +643,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
             className="h-7 text-xs bg-slate-800 text-slate-200 border-slate-600 hover:bg-slate-700 hover:text-white"
             leftIcon={<Archive className="w-3.5 h-3.5 text-sage" />}
           >
-            Download ZIP
+            ZIP
           </Button>
           <Button
             variant="outline"
@@ -650,7 +651,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
             onClick={handleBulkDelete}
             className="h-7 text-xs bg-transparent text-red-400 border-red-500/50 hover:bg-red-950/40 hover:text-red-300"
           >
-            Delete Selected
+            Delete
           </Button>
           <Button
             variant="ghost"

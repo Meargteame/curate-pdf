@@ -99,7 +99,13 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   // UI States
   const [activeTab, setActiveTab] = useState<'content' | 'style' | 'export'>('content');
   const [mobileMode, setMobileMode] = useState<'edit' | 'preview'>('edit');
-  const [zoom, setZoom] = useState<number>(0.85);
+  const [zoom, setZoom] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 640) return 0.42;
+      if (window.innerWidth < 1024) return 0.65;
+    }
+    return 0.85;
+  });
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState<boolean>(false);
@@ -108,6 +114,17 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [isFullscreenPreview, setIsFullscreenPreview] = useState<boolean>(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState<boolean>(false);
   const [deskTheme, setDeskTheme] = useState<'dark' | 'light'>('dark');
+
+  // Auto-fit zoom on window resize if user hasn't heavily customized it
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setZoom(prev => (prev > 0.55 ? 0.42 : prev));
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Global hotkeys (Ctrl+S to save, Ctrl+P to print)
   useEffect(() => {
@@ -381,15 +398,15 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   return (
     <div className="flex flex-col h-full w-full bg-paper overflow-hidden">
       {/* Top Action Subheader */}
-      <div className="bg-white border-b border-paper-border px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-2xs z-20">
-        <div className="flex items-center gap-3">
+      <div className="bg-white border-b border-paper-border px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between shrink-0 shadow-2xs z-20">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => navigate('/app/documents')}
-            className="text-slate-500 hover:text-ink -ml-2 h-8"
+            className="text-slate-500 hover:text-ink -ml-1 sm:-ml-2 h-8 px-2 sm:px-3"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="w-4 h-4 mr-0.5 sm:mr-1" />
             <span className="hidden sm:inline">Back</span>
           </Button>
 
@@ -404,7 +421,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                   setDoc({ ...doc, title: e.target.value });
                   setSaveState('unsaved');
                 }}
-                className="font-display font-bold text-sm sm:text-base text-ink bg-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-forest px-1.5 py-0.5 rounded border border-transparent hover:border-paper-border transition-colors w-48 sm:w-80"
+                className="font-display font-bold text-xs sm:text-base text-ink bg-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-forest px-1.5 py-0.5 rounded border border-transparent hover:border-paper-border transition-colors w-24 xs:w-36 sm:w-80 truncate"
                 placeholder="Document Title"
               />
               <Badge status={doc.status} size="sm" className="hidden md:inline-flex" />
@@ -431,7 +448,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             </div>
             
             <div className="flex items-center gap-2 pl-1.5">
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
                 {doc.referenceNumber} • {doc.category}
               </span>
               <button
@@ -522,9 +539,9 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                 onClick={handleDownloadPDF}
                 loading={isGenerating}
                 leftIcon={<Download className="w-3.5 h-3.5" />}
-                className="text-xs font-semibold h-8 rounded-r-none"
+                className="text-xs font-semibold h-8 rounded-r-none px-2.5 sm:px-3"
               >
-                Download PDF
+                <span className="hidden sm:inline">Download </span>PDF
               </Button>
               <button
                 type="button"
@@ -1170,8 +1187,8 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
           }`}>
             <div className="flex items-center gap-2 text-xs font-medium">
               <span className={`font-display font-semibold ${deskTheme === 'dark' ? 'text-white' : 'text-ink'}`}>Page 1</span>
-              <span className="opacity-40">•</span>
-              <span className="uppercase text-[11px] font-mono opacity-75">{doc.pageSize} {doc.orientation}</span>
+              <span className="opacity-40 hidden sm:inline">•</span>
+              <span className="uppercase text-[11px] font-mono opacity-75 hidden sm:inline">{doc.pageSize} {doc.orientation}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1194,7 +1211,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                 deskTheme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-paper-subtle border-paper-border text-slate-600'
               }`}>
                 <button
-                  onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
+                  onClick={() => setZoom(prev => Math.max(0.25, Number((prev - 0.1).toFixed(2))))}
                   className="p-1 rounded hover:bg-white/20 hover:text-white"
                   title="Zoom Out"
                 >
@@ -1204,16 +1221,16 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                   {Math.round(zoom * 100)}%
                 </span>
                 <button
-                  onClick={() => setZoom(prev => Math.min(1.3, prev + 0.1))}
+                  onClick={() => setZoom(prev => Math.min(1.5, Number((prev + 0.1).toFixed(2))))}
                   className="p-1 rounded hover:bg-white/20 hover:text-white"
                   title="Zoom In"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => setZoom(0.85)}
+                  onClick={() => setZoom(window.innerWidth < 640 ? 0.42 : window.innerWidth < 1024 ? 0.65 : 0.85)}
                   className="p-1 rounded hover:bg-white/20 text-[11px] font-semibold px-1"
-                  title="Reset zoom"
+                  title="Reset zoom to screen fit"
                 >
                   Fit
                 </button>
@@ -1231,7 +1248,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
           </div>
 
           {/* Canvas Scroll Area */}
-          <div className="flex-1 p-6 sm:p-10 flex justify-center items-start overflow-auto relative z-0">
+          <div className="flex-1 p-2 sm:p-6 lg:p-10 flex justify-center items-start overflow-auto relative z-0">
             <div className={`transition-all duration-300 ${
               deskTheme === 'dark'
                 ? 'shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.12)]'
