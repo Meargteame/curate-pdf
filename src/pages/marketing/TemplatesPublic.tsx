@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ArrowRight, Eye, Sparkles } from 'lucide-react';
+import { Search, ArrowRight, Eye } from 'lucide-react';
 import { getStoredTemplates, getStoredBrandKit } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';

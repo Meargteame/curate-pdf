@@ -65,8 +65,8 @@ export const Register: React.FC = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-paper-border shadow-doc-lg space-y-5">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-paper-border shadow-doc-lg space-y-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
             <Input
               label="Your Full Name"
               value={name}
@@ -105,7 +105,7 @@ export const Register: React.FC = () => {
               required
             />
 
-            <div className="text-xs text-slate-500 bg-forest-50/50 p-3 rounded-lg border border-forest-100 flex items-center gap-2">
+            <div className="text-xs text-slate-600 bg-forest-50/60 p-3.5 rounded-xl border border-forest-100/80 flex items-center gap-2.5">
               <ShieldCheck className="w-4 h-4 text-forest shrink-0" />
               <span>Includes 14-day full access trial of Professional features. No credit card required.</span>
             </div>
@@ -113,9 +113,9 @@ export const Register: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              size="md"
+              size="lg"
               loading={isLoading}
-              className="w-full justify-center mt-2"
+              className="w-full justify-center h-12 text-sm sm:text-base font-bold rounded-xl shadow-md hover:shadow-lg mt-1"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
               Launch Organization Workspace

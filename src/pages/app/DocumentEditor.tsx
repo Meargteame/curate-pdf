@@ -15,7 +15,6 @@ import {
   Maximize2,
   Minimize2,
   CheckCircle,
-  Sparkles,
   ChevronDown,
   ChevronUp,
   FileDown,
@@ -1154,7 +1153,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
 
               <div className="p-4 rounded-lg bg-forest-50 border border-forest-200 text-xs space-y-2">
                 <div className="flex items-center gap-1.5 font-bold text-forest">
-                  <Sparkles className="w-4 h-4 text-sage" />
+                  <CheckCircle className="w-4 h-4 text-forest" />
                   <span>Real Vector PDF Rendering</span>
                 </div>
                 <p className="text-slate-600 leading-relaxed">

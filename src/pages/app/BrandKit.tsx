@@ -3,7 +3,7 @@ import {
   Palette, 
   Save, 
   Upload, 
-  Sparkles, 
+  Eye, 
   Check, 
   FileCheck,
   RefreshCw
@@ -361,7 +361,7 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
         <div className="lg:col-span-6 space-y-3 sticky top-20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-forest" />
+              <Eye className="w-4 h-4 text-forest" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
                 Real-Time Document Preview
               </h3>

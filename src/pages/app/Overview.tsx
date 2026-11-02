@@ -12,8 +12,7 @@ import {
   Palette,
   FileCheck,
   ChevronRight,
-  TrendingUp,
-  Sparkles
+  TrendingUp
 } from 'lucide-react';
 import { 
   getStoredDocuments, 

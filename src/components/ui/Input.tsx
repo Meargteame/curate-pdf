@@ -14,15 +14,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
     return (
-      <div className="w-full space-y-1.5 text-left">
+      <div className="w-full text-left">
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-semibold text-ink uppercase tracking-wider">
+          <label htmlFor={inputId} className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
             {label}
           </label>
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3 text-slate-400 pointer-events-none flex items-center">
+            <div className="absolute left-3.5 text-slate-400 pointer-events-none flex items-center">
               {leftIcon}
             </div>
           )}
@@ -30,24 +30,24 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              "w-full h-9.5 px-3 rounded-lg border border-paper-border bg-white text-ink text-sm placeholder:text-slate-400 transition-colors",
+              "w-full h-11 px-3.5 rounded-xl border border-paper-border bg-white text-ink text-sm placeholder:text-slate-400 transition-colors shadow-2xs",
               "focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest",
               "disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed",
-              leftIcon && "pl-9",
-              rightIcon && "pr-9",
+              leftIcon && "pl-11",
+              rightIcon && "pr-11",
               error && "border-red-500 focus:ring-red-200 focus:border-red-500",
               className
             )}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 text-slate-400 pointer-events-none flex items-center">
+            <div className="absolute right-3.5 text-slate-400 pointer-events-none flex items-center">
               {rightIcon}
             </div>
           )}
         </div>
-        {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
-        {helperText && !error && <p className="text-xs text-slate-500">{helperText}</p>}
+        {error && <p className="text-xs text-red-600 font-medium mt-1.5">{error}</p>}
+        {helperText && !error && <p className="text-xs text-slate-500 mt-1.5">{helperText}</p>}
       </div>
     );
   }

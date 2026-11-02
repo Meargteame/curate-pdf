@@ -9,7 +9,6 @@ import {
   ArrowRight, 
   AlertCircle,
   RefreshCw,
-  Sparkles,
   Eye
 } from 'lucide-react';
 import { getStoredTemplates, getStoredBrandKit } from '../../utils/storage';

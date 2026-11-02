@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, Sparkles, HelpCircle, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { Check, ArrowRight, HelpCircle, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { getStoredUserProfile, saveStoredUserProfile } from '../../utils/storage';
 

@@ -14,7 +14,6 @@ import {
   ExternalLink, 
   ChevronRight, 
   Bell, 
-  Sparkles, 
   LogOut, 
   User, 
   ShieldCheck, 
@@ -301,7 +300,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               size="sm"
               className="hidden sm:inline-flex text-xs h-8"
               onClick={() => navigate('/app/templates')}
-              leftIcon={<Sparkles className="w-3.5 h-3.5 text-sage" />}
+              leftIcon={<FileCode className="w-3.5 h-3.5 text-forest" />}
             >
               Browse templates
             </Button>
@@ -451,7 +450,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                     className="w-full text-left p-2 rounded-lg hover:bg-forest-50/50 flex items-center justify-between text-xs transition-colors group"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Sparkles className="w-3.5 h-3.5 text-sage shrink-0" />
+                      <FileCode className="w-3.5 h-3.5 text-forest shrink-0" />
                       <span className="font-semibold text-ink group-hover:text-forest truncate">{tpl.name}</span>
                     </div>
                     <span className="text-[10px] text-forest bg-forest-50 px-1.5 py-0.5 rounded capitalize shrink-0">{tpl.category}</span>

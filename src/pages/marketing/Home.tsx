@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { 
   ArrowRight, 
-  Sparkles, 
   CheckCircle2, 
   Layers, 
   Palette, 
@@ -14,7 +13,9 @@ import {
   ChevronRight,
   Printer,
   FileCheck,
-  Zap
+  Zap,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
@@ -37,10 +38,65 @@ export const Home: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const [activeApiTab, setActiveApiTab] = useState<'curl' | 'node' | 'python'>('curl');
+  const [isCopied, setIsCopied] = useState(false);
+
+  const apiSnippets = {
+    curl: `curl -X POST https://curatepdf.site/api/v1/jobs/bulk \\
+  -H "Authorization: Bearer cur_live_948a2..." \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "templateId": "tpl-invoice-minimal",
+    "records": [
+      {
+        "client": "Acme Global Tech",
+        "reference": "INV-2026-001",
+        "amount": "$4,250.00",
+        "date": "2026-11-02"
+      }
+    ]
+  }' \\
+  --output invoice_batch.zip`,
+
+    node: `import { CuratePDF } from '@curatepdf/sdk';
+
+const curate = new CuratePDF({ apiKey: process.env.CURATEPDF_API_KEY });
+
+const pdfStream = await curate.documents.generate({
+  templateId: 'tpl-proposal-modern',
+  data: {
+    clientCompany: 'Northwind Global',
+    total: 32000,
+    currency: 'USD',
+    sections: [{ title: 'Executive Scope', content: 'Milestones and delivery plan.' }]
+  },
+  format: 'A4',
+  dpi: 192
+});`,
+
+    python: `from curatepdf import CuratePDF
+
+client = CuratePDF(api_key="cur_live_948a2...")
+
+document = client.documents.create(
+    template_id="tpl-invoice-minimal",
+    data={
+        "client": "Stripe Global Services",
+        "reference": "INV-2026-8801",
+        "subtotal": 12500,
+        "tax_rate": 8.5
+    },
+    page_size="A4",
+    export_format="pdf"
+)
+
+document.save("invoice.pdf")`
+  };
+
   return (
     <div className="space-y-24 pb-20 relative overflow-hidden">
       {/* Ambient background glow & grid */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-forest-200/30 via-mint-subtle/40 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-forest-100/40 blur-3xl pointer-events-none -z-10" />
       <div className="absolute inset-0 bg-dot-grid opacity-50 pointer-events-none -z-10" />
 
       {/* Hero Section */}
@@ -58,7 +114,7 @@ export const Home: React.FC = () => {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-ink leading-[1.08]">
               Professional PDFs,{' '}
-              <span className="bg-gradient-to-r from-forest via-emerald-700 to-mint-dark bg-clip-text text-transparent">
+              <span className="text-forest">
                 engineered for precision.
               </span>
             </h1>
@@ -123,29 +179,34 @@ export const Home: React.FC = () => {
               ))}
             </div>
 
-            {/* Document Preview Frame: Cool Studio Workbench */}
-            <div className="w-full bg-[#0E151A] rounded-2xl p-4 sm:p-6 border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col items-center min-h-[580px] sm:min-h-[660px]">
-              {/* Top spotlight glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-32 bg-emerald-500/15 blur-3xl pointer-events-none" />
-              <div className="absolute inset-0 bg-dot-grid-dark opacity-40 pointer-events-none" />
+            {/* Document Preview Frame: Modern Studio Workbench */}
+            <div className="w-full bg-white rounded-2xl p-4 sm:p-6 border border-paper-border shadow-card hover:shadow-card-hover relative overflow-hidden flex flex-col items-center min-h-[580px] sm:min-h-[660px] transition-all">
+              {/* Subtle ambient desk background texture */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-36 bg-forest-50/60 blur-2xl pointer-events-none" />
+              <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" />
 
               {/* Floating top bar on workbench */}
-              <div className="w-full flex items-center justify-between mb-4 text-slate-400 text-xs px-2 relative z-10">
+              <div className="w-full flex items-center justify-between mb-4 text-slate-500 text-xs px-2 relative z-10 pb-3 border-b border-paper-border">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-mono text-[11px] text-slate-300">Live Canvas Rendering</span>
+                  <div className="flex items-center gap-1.5 mr-1 hidden sm:flex">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-mono text-[11px] text-slate-600 font-medium">Live Canvas (A4 • 2× DPI)</span>
                 </div>
                 <button
                   onClick={() => navigate(`/app/editor?id=${currentHeroDoc.id}`)}
-                  className="text-mint hover:underline text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                  className="text-forest hover:text-forest-900 text-xs font-semibold flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   <span>Edit in Studio</span>
-                  <ChevronRight className="w-3 h-3" />
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Document Sheet */}
-              <div className="relative z-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.1)] rounded-sm overflow-hidden transition-all duration-300">
+              <div className="relative z-10 shadow-[0_20px_45px_-12px_rgba(15,61,46,0.18),0_4px_12px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.05)] rounded-sm overflow-hidden transition-all duration-300 bg-white">
                 <LivePDFCanvas
                   document={currentHeroDoc}
                   brandKit={brandKit}
@@ -216,71 +277,124 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Comparison Matrix: Manual Layouts vs CuratePDF */}
+      {/* Developer API & Headless Engine Showcase */}
       <section className="max-w-6xl mx-auto px-4 sm:px-8">
         <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
           <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
-            The Better Way
+            Developer & Headless Engine
           </span>
           <h2 className="text-3xl font-display font-bold text-ink">
-            Stop wrestling with Word margins and broken table wraps
+            Render publication-grade PDFs directly from your stack
           </h2>
           <p className="text-sm text-slate-500">
-            Compare manual document drafting with CuratePDF’s structured automation engine.
+            Trigger on-demand document generation or bulk archives via standard REST endpoints with sub-100ms vector execution.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Traditional Manual Approach */}
-          <div className="bg-white p-7 rounded-2xl border border-red-200/80 shadow-xs space-y-5">
-            <div className="flex items-center gap-2.5 text-red-600 font-bold text-sm">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>Traditional Document Creation</span>
+        <div className="bg-[#0B0F12] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+          {/* Left: Code Snippet */}
+          <div className="lg:col-span-7 p-6 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col justify-between">
+            <div>
+              {/* Terminal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800/80 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 mr-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                    {(['curl', 'node', 'python'] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveApiTab(tab)}
+                        className={`px-3 py-1 text-xs font-mono font-medium rounded-md transition-all cursor-pointer ${
+                          activeApiTab === tab
+                            ? 'bg-slate-800 text-white shadow-2xs font-bold'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        {tab === 'curl' ? 'cURL' : tab === 'node' ? 'Node.js' : 'Python'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(apiSnippets[activeApiTab]);
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                  }}
+                  className="text-xs font-mono text-slate-400 hover:text-slate-200 flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Copy Code"
+                >
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+
+              {/* Code Area */}
+              <pre className="font-mono text-xs text-slate-300 overflow-x-auto p-2 leading-relaxed selection:bg-forest selection:text-white">
+                <code>{apiSnippets[activeApiTab]}</code>
+              </pre>
             </div>
-            <ul className="space-y-3 text-xs text-slate-600">
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span><strong>40+ minutes per document:</strong> Constant re-adjusting of table borders, spacing, and page splits.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span><strong>Broken math formulas:</strong> Manual recalculation of subtotals, tax brackets, and line item discounts.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span><strong>Brand inconsistency:</strong> Team members using wrong hex colors, mismatched fonts, and outdated logos.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span><strong>No programmatic path:</strong> Impossible to hook into backend databases or trigger via API endpoints.</span>
-              </li>
-            </ul>
+
+            <div className="pt-4 mt-6 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live Endpoint Active
+              </span>
+              <span>200 OK • 76ms latency</span>
+            </div>
           </div>
 
-          {/* CuratePDF Method */}
-          <div className="bg-forest-50/60 p-7 rounded-2xl border-2 border-forest/30 shadow-card space-y-5">
-            <div className="flex items-center gap-2.5 text-forest font-bold text-sm">
-              <span className="w-2 h-2 rounded-full bg-forest" />
-              <span>The CuratePDF Standard</span>
+          {/* Right: Response Payload & Specs */}
+          <div className="lg:col-span-5 p-6 bg-[#0E151A]/60 flex flex-col justify-between space-y-4">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3 text-xs">
+                <span className="font-mono text-slate-400">Response Payload (JSON)</span>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  HTTP 200 OK
+                </span>
+              </div>
+              <pre className="font-mono text-[11px] text-emerald-300/90 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800/80 overflow-x-auto leading-relaxed">
+{`{
+  "status": "success",
+  "documentId": "doc-9482-a",
+  "renderEngine": "VectorPrint 2.0",
+  "renderTimeMs": 76,
+  "pages": 1,
+  "pageSize": "ISO-A4",
+  "dpi": 192,
+  "checksum": "sha256:d8a2...3f1",
+  "downloadUrl": "/api/v1/documents/doc-9482-a/pdf"
+}`}
+              </pre>
             </div>
-            <ul className="space-y-3 text-xs text-slate-700">
-              <li className="flex items-start gap-2.5">
-                <span className="text-forest font-bold shrink-0">✓</span>
-                <span><strong>Under 60 seconds:</strong> Clean structured form input instantly generates publication-ready output.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-forest font-bold shrink-0">✓</span>
-                <span><strong>Real-time dynamic arithmetic:</strong> Live calculations for subtotals, tax rates, and currencies.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-forest font-bold shrink-0">✓</span>
-                <span><strong>Centralized Brand Tokens:</strong> Workspace palette and corporate typography apply automatically.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-forest font-bold shrink-0">✓</span>
-                <span><strong>Developer REST API & Bulk ZIP:</strong> Generate 1 or 1,000 PDFs programmatically via secure endpoints.</span>
-              </li>
-            </ul>
+
+            <div className="space-y-2 pt-2 border-t border-slate-800/60">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Batch Throughput</span>
+                <span className="font-mono text-white font-semibold">1,000 PDFs / 42 sec</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Color Calibration</span>
+                <span className="font-mono text-white font-semibold">sRGB & CMYK Print Safe</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Delivery Channels</span>
+                <span className="font-mono text-white font-semibold">Stream, ZIP, S3 Webhook</span>
+              </div>
+              <div className="pt-2">
+                <NavLink
+                  to="/app/developer"
+                  className="w-full text-center py-2 rounded-xl bg-forest hover:bg-forest-900 text-white text-xs font-semibold block transition-colors shadow-2xs"
+                >
+                  Explore Developer Sandbox & API Keys →
+                </NavLink>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -432,11 +546,6 @@ export const Home: React.FC = () => {
       {/* Final Action Callout */}
       <section className="max-w-5xl mx-auto px-4 sm:px-8 text-center">
         <div className="bg-white rounded-2xl p-10 sm:p-14 border border-paper-border shadow-doc-lg space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-50 border border-forest-200 text-forest text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-sage" />
-            <span>Ready for your team</span>
-          </div>
-
           <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-ink">
             Start creating consistent, professional PDFs today.
           </h2>

@@ -11,7 +11,6 @@ import {
   CreditCard,
   Users,
   CheckCircle2,
-  Sparkles,
   Mail,
   Plus,
   KeyRound
