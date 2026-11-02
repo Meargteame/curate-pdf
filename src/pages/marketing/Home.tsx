@@ -99,118 +99,154 @@ document.save("invoice.pdf")`
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-forest-100/40 blur-3xl pointer-events-none -z-10" />
       <div className="absolute inset-0 bg-dot-grid opacity-50 pointer-events-none -z-10" />
 
-      {/* Hero Section */}
-      <section className="pt-12 sm:pt-20 px-4 sm:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column: Value Proposition */}
-          <div className="lg:col-span-6 space-y-6 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest-50/80 backdrop-blur-md border border-forest-200/80 text-forest text-xs font-semibold shadow-2xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-forest" />
-              </span>
-              <span>CuratePDF 2.0 • Real Vector PDF Engine</span>
-            </div>
+      {/* Hero Section: Centered, Expansive & Architectural */}
+      <section className="pt-8 sm:pt-16 px-4 sm:px-8 max-w-7xl mx-auto text-center">
+        {/* Subtle, restrained Eyebrow Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-50/90 border border-forest-200/60 text-forest text-xs font-semibold shadow-2xs mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-forest" />
+          <span>Vector PDF Infrastructure & Enterprise Brand Engine</span>
+        </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-ink leading-[1.08]">
-              Professional PDFs,{' '}
-              <span className="text-forest">
-                engineered for precision.
-              </span>
-            </h1>
+        {/* Commanding Headline */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight text-ink max-w-4xl mx-auto leading-[1.08] mb-6">
+          Professional PDFs,{' '}
+          <span className="text-forest">engineered for precision.</span>
+        </h1>
 
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
-              Transform structured data into publication-ready documents. Apply your enterprise brand kit, preview every millimeter in real-time, and download crisp vector PDFs instantly.
-            </p>
+        {/* Subtitle */}
+        <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
+          Transform structured business data into publication-ready proposals, invoices, and executive reports. Centralized brand tokens, real-time vector canvas, and headless developer APIs.
+        </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => navigate('/app/editor')}
-                rightIcon={<ArrowRight className="w-4 h-4" />}
-                className="justify-center shadow-lg hover:shadow-xl"
-              >
-                Create your first PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => navigate('/templates')}
-                leftIcon={<FileCode className="w-4 h-4 text-forest" />}
-                className="justify-center bg-white/60 backdrop-blur-sm"
-              >
-                Explore 8 templates
-              </Button>
-            </div>
+        {/* Primary and Secondary CTA Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => navigate('/app/editor')}
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="h-12 px-7 text-sm sm:text-base font-bold shadow-md hover:shadow-xl w-full sm:w-auto justify-center"
+          >
+            Create your first PDF
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => navigate('/templates')}
+            leftIcon={<FileCode className="w-4 h-4 text-forest" />}
+            className="h-12 px-7 text-sm sm:text-base font-semibold w-full sm:w-auto justify-center border-paper-border hover:bg-slate-50"
+          >
+            Explore 8 templates
+          </Button>
+        </div>
 
-            <div className="pt-6 border-t border-paper-border flex flex-wrap items-center gap-6 text-xs text-slate-500">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-forest" />
-                <span>Instant Vector Rendering (2× DPI)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-forest" />
-                <span>Centralized Brand Tokens</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-forest" />
-                <span>Bulk CSV Batch Generator</span>
-              </div>
-            </div>
+        {/* Value Proposition Highlights */}
+        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-medium text-slate-500 mb-12">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-forest" />
+            <span>Instant Vector Rendering (2× DPI)</span>
           </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-forest" />
+            <span>Centralized Brand Tokens</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-forest" />
+            <span>Bulk CSV Batch Generator</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-forest" />
+            <span>Sub-100ms REST API</span>
+          </div>
+        </div>
 
-          {/* Right Column: Interactive Real-Time Document Showcase in Studio Desk */}
-          <div className="lg:col-span-6 flex flex-col items-center">
-            {/* Interactive Document Switcher Pill Bar */}
-            <div className="w-full mb-3 flex items-center justify-between bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-paper-border shadow-2xs overflow-x-auto">
-              {heroDocuments.slice(0, 4).map((doc, idx) => (
-                <button
-                  key={doc.id}
-                  onClick={() => setSelectedHeroIndex(idx)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    selectedHeroIndex === idx
-                      ? 'bg-forest text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-ink hover:bg-slate-100'
-                  }`}
-                >
-                  {doc.category === 'business' ? 'Executive Proposal' : doc.category === 'finance' ? 'Commercial Invoice' : doc.category === 'reports' ? 'Quarterly Report' : 'Executive Dossier'}
-                </button>
-              ))}
-            </div>
-
-            {/* Document Preview Frame: Modern Studio Workbench */}
-            <div className="w-full bg-white rounded-2xl p-4 sm:p-6 border border-paper-border shadow-card hover:shadow-card-hover relative overflow-hidden flex flex-col items-center min-h-[580px] sm:min-h-[660px] transition-all">
-              {/* Subtle ambient desk background texture */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-36 bg-forest-50/60 blur-2xl pointer-events-none" />
-              <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" />
-
-              {/* Floating top bar on workbench */}
-              <div className="w-full flex items-center justify-between mb-4 text-slate-500 text-xs px-2 relative z-10 pb-3 border-b border-paper-border">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 mr-1 hidden sm:flex">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="font-mono text-[11px] text-slate-600 font-medium">Live Canvas (A4 • 2× DPI)</span>
+        {/* Interactive Studio Workspace Window */}
+        <div className="max-w-5xl mx-auto w-full relative">
+          <div className="bg-white rounded-2xl border border-paper-border shadow-card hover:shadow-card-hover transition-all overflow-hidden text-left">
+            {/* Window Chrome Toolbar */}
+            <div className="bg-slate-50/95 border-b border-paper-border px-4 py-3 flex items-center justify-between gap-4">
+              {/* Window Controls + File Label */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/40" />
+                  <span className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/40" />
+                  <span className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/40" />
                 </div>
-                <button
-                  onClick={() => navigate(`/app/editor?id=${currentHeroDoc.id}`)}
-                  className="text-forest hover:text-forest-900 text-xs font-semibold flex items-center gap-1 hover:underline cursor-pointer"
-                >
-                  <span>Edit in Studio</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+                <span className="text-slate-300 hidden sm:inline">|</span>
+                <span className="font-mono text-xs font-semibold text-slate-700 truncate max-w-[140px] sm:max-w-none">
+                  {currentHeroDoc.title || 'Executive_Proposal.pdf'}
+                </span>
+                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-slate-200/60 text-slate-600 font-medium">
+                  A4 • 300 DPI
+                </span>
               </div>
 
-              {/* Document Sheet */}
-              <div className="relative z-10 shadow-[0_20px_45px_-12px_rgba(15,61,46,0.18),0_4px_12px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.05)] rounded-sm overflow-hidden transition-all duration-300 bg-white">
+              {/* Integrated Document Template Switcher */}
+              <div className="flex items-center bg-white p-1 rounded-xl border border-paper-border shadow-2xs overflow-x-auto">
+                {heroDocuments.slice(0, 4).map((doc, idx) => (
+                  <button
+                    key={doc.id}
+                    onClick={() => setSelectedHeroIndex(idx)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      selectedHeroIndex === idx
+                        ? 'bg-forest text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-ink hover:bg-slate-50'
+                    }`}
+                  >
+                    {doc.category === 'business'
+                      ? 'Proposal'
+                      : doc.category === 'finance'
+                      ? 'Invoice'
+                      : doc.category === 'reports'
+                      ? 'Report'
+                      : 'Dossier'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Direct Studio Launch CTA */}
+              <button
+                onClick={() => navigate(`/app/editor?id=${currentHeroDoc.id}`)}
+                className="hidden sm:inline-flex px-3.5 py-1.5 bg-forest text-white hover:bg-forest-800 text-xs font-bold rounded-lg transition-colors items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
+              >
+                <span>Edit in Studio</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Studio Canvas Workbench */}
+            <div className="relative bg-[#F8FAF9] py-8 sm:py-12 px-4 flex justify-center items-center overflow-hidden min-h-[500px] sm:min-h-[620px]">
+              {/* Subtle background dot grid */}
+              <div className="absolute inset-0 bg-dot-grid opacity-35 pointer-events-none" />
+
+              {/* Floating Feature Card: Brand Kit Synchronization */}
+              <div className="hidden lg:flex absolute left-8 top-12 bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-paper-border shadow-card items-center gap-3 pointer-events-none z-20">
+                <div className="w-8 h-8 rounded-lg bg-forest flex items-center justify-center text-white shadow-2xs">
+                  <Palette className="w-4 h-4" />
+                </div>
+                <div className="text-left text-xs">
+                  <div className="font-bold text-ink">Brand Kit Synced</div>
+                  <div className="text-slate-500 font-mono text-[10px]">{brandKit.companyName || 'Acme'} • #0F3D2E</div>
+                </div>
+              </div>
+
+              {/* Floating Feature Card: Millimetric Fidelity */}
+              <div className="hidden lg:flex absolute right-8 bottom-14 bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-paper-border shadow-card items-center gap-3 pointer-events-none z-20">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-2xs">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="text-left text-xs">
+                  <div className="font-bold text-ink">Vector Precision</div>
+                  <div className="text-slate-500 text-[10px]">Zero page-split glitches</div>
+                </div>
+              </div>
+
+              {/* The Crisp Live Document Sheet */}
+              <div className="relative z-10 shadow-[0_20px_50px_-15px_rgba(15,61,46,0.18),0_6px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.06)] rounded-sm overflow-hidden bg-white transition-all duration-300">
                 <LivePDFCanvas
                   document={currentHeroDoc}
                   brandKit={brandKit}
-                  zoom={isMobile ? 0.38 : 0.56}
+                  zoom={isMobile ? 0.38 : 0.60}
                 />
               </div>
             </div>
