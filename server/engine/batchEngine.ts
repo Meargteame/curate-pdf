@@ -4,7 +4,8 @@ import { DocumentData, BrandKitConfig, TemplateDefinition } from '../../src/type
 import { curateAndGeneratePdf } from './curator';
 
 const require = createRequire(import.meta.url);
-const archiver = require('archiver');
+const archiverModule = require('archiver');
+const ZipArchive = archiverModule.ZipArchive || archiverModule;
 
 export interface BatchJob {
   id: string;
@@ -121,7 +122,9 @@ export async function executeBatchJob(
 
 function createZipArchive(files: Array<{ name: string; buffer: Buffer }>): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = typeof ZipArchive === 'function' && ZipArchive.prototype?.append 
+      ? new ZipArchive({ zlib: { level: 9 } }) 
+      : (typeof archiverModule === 'function' ? archiverModule('zip', { zlib: { level: 9 } }) : new (archiverModule.ZipArchive || archiverModule)({ zlib: { level: 9 } }));
     const chunks: Buffer[] = [];
 
     const bufferStream = new Writable({

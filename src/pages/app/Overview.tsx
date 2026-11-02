@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { 
   getStoredDocuments, 
+  saveStoredDocuments,
   getStoredTemplates, 
   getStoredBrandKit,
   upsertDocument
@@ -32,6 +33,19 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
   const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
   const templates = getStoredTemplates();
   const brandKit = getStoredBrandKit();
+
+  // Dynamic live fetch from server database
+  React.useEffect(() => {
+    fetch('/api/v1/documents')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data && Array.isArray(json.data)) {
+          setDocuments(json.data);
+          saveStoredDocuments(json.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const recentDocs = documents.slice(0, 5);
   const generatedCount = documents.filter(d => d.status === 'generated').length;

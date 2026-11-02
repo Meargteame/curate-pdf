@@ -469,6 +469,14 @@ export const saveStoredBrandKit = (brandKit: BrandKitConfig): void => {
   } catch (e) {
     console.error('Failed to save brand kit to storage', e);
   }
+  // Sync to Backend Database API
+  try {
+    fetch('/api/v1/brand-kit', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(brandKit),
+    }).catch(() => {});
+  } catch {}
 };
 
 export const getStoredDocuments = (): DocumentData[] => {
@@ -500,8 +508,20 @@ export const upsertDocument = (doc: DocumentData): DocumentData[] => {
   if (index >= 0) {
     updated = [...docs];
     updated[index] = { ...doc, updatedAt: new Date().toISOString() };
+    // Sync update to backend
+    fetch(`/api/v1/documents/${doc.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated[index]),
+    }).catch(() => {});
   } else {
     updated = [doc, ...docs];
+    // Sync create to backend
+    fetch('/api/v1/documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(doc),
+    }).catch(() => {});
   }
   saveStoredDocuments(updated);
   return updated;
@@ -511,6 +531,10 @@ export const deleteStoredDocument = (id: string): DocumentData[] => {
   const docs = getStoredDocuments();
   const updated = docs.filter(d => d.id !== id);
   saveStoredDocuments(updated);
+  // Sync delete to backend
+  fetch(`/api/v1/documents/${id}`, {
+    method: 'DELETE',
+  }).catch(() => {});
   return updated;
 };
 

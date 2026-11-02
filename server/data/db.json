@@ -1,6 +1,174 @@
 {
   "documents": [
     {
+      "id": "doc-mvywa4fo",
+      "title": "Q4 Strategic Advisory Invoice #9842 (Copy)",
+      "referenceNumber": "INV-2026-089-COPY",
+      "templateId": "tpl-invoice-minimal",
+      "category": "finance",
+      "status": "draft",
+      "createdAt": "2026-11-02T06:45:32.532Z",
+      "updatedAt": "2026-11-02T06:45:32.544Z",
+      "date": "2026-11-02",
+      "dueDate": "2026-11-25",
+      "clientName": "Marcus Vance",
+      "clientCompany": "Aether Cloud Technologies",
+      "clientEmail": "accounts@aethercloud.net",
+      "clientAddress": "782 Innovation Way, Austin, TX 78701",
+      "summary": "Thank you for your business. Payment is due within 30 days of invoice receipt via direct wire transfer or corporate ACH.",
+      "sections": [
+        {
+          "id": "1",
+          "title": "Scope & Objectives",
+          "content": "Detailed scope of engagement and milestones."
+        }
+      ],
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Product Design Systems Consulting (October 2026)",
+          "quantity": 40,
+          "rate": 175
+        },
+        {
+          "id": "2",
+          "description": "PDF Automation Pipeline Implementation",
+          "quantity": 1,
+          "rate": 4200
+        },
+        {
+          "id": "3",
+          "description": "Dedicated Infrastructure Cloud Provisioning",
+          "quantity": 1,
+          "rate": 850
+        }
+      ],
+      "subtotal": 12050,
+      "taxTotal": 964,
+      "total": 13014,
+      "currency": "USD",
+      "paymentTerms": "Net 30 Days. Late balance subject to 1.5% interest per month.",
+      "recipientName": "",
+      "awardTitle": "",
+      "candidateRole": "",
+      "candidateSkills": [],
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margin": "standard"
+    },
+    {
+      "id": "doc-mvyw9rtw",
+      "title": "Q4 Strategic Advisory Invoice #9842",
+      "referenceNumber": "INV-2026-089",
+      "templateId": "tpl-invoice-minimal",
+      "category": "finance",
+      "status": "ready",
+      "createdAt": "2026-11-02T06:45:16.196Z",
+      "updatedAt": "2026-11-02T06:45:19.432Z",
+      "date": "2026-11-02",
+      "dueDate": "2026-11-25",
+      "clientName": "Marcus Vance",
+      "clientCompany": "Aether Cloud Technologies",
+      "clientEmail": "accounts@aethercloud.net",
+      "clientAddress": "782 Innovation Way, Austin, TX 78701",
+      "summary": "Thank you for your business. Payment is due within 30 days of invoice receipt via direct wire transfer or corporate ACH.",
+      "sections": [
+        {
+          "id": "1",
+          "title": "Scope & Objectives",
+          "content": "Detailed scope of engagement and milestones."
+        }
+      ],
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Product Design Systems Consulting (October 2026)",
+          "quantity": 40,
+          "rate": 175
+        },
+        {
+          "id": "2",
+          "description": "PDF Automation Pipeline Implementation",
+          "quantity": 1,
+          "rate": 4200
+        },
+        {
+          "id": "3",
+          "description": "Dedicated Infrastructure Cloud Provisioning",
+          "quantity": 1,
+          "rate": 850
+        }
+      ],
+      "subtotal": 12050,
+      "taxTotal": 964,
+      "total": 13014,
+      "currency": "USD",
+      "paymentTerms": "Net 30 Days. Late balance subject to 1.5% interest per month.",
+      "recipientName": "",
+      "awardTitle": "",
+      "candidateRole": "",
+      "candidateSkills": [],
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margin": "standard"
+    },
+    {
+      "id": "doc-mvyw5jvu",
+      "title": "Commercial Tax Invoice",
+      "referenceNumber": "INV-2026-089",
+      "templateId": "tpl-invoice-minimal",
+      "category": "finance",
+      "status": "ready",
+      "createdAt": "2026-11-02T06:41:59.274Z",
+      "updatedAt": "2026-11-02T06:42:01.854Z",
+      "date": "2026-11-02",
+      "dueDate": "2026-11-25",
+      "clientName": "Marcus Vance",
+      "clientCompany": "Aether Cloud Technologies",
+      "clientEmail": "accounts@aethercloud.net",
+      "clientAddress": "782 Innovation Way, Austin, TX 78701",
+      "summary": "Thank you for your business. Payment is due within 30 days of invoice receipt via direct wire transfer or corporate ACH.",
+      "sections": [
+        {
+          "id": "1",
+          "title": "Scope & Objectives",
+          "content": "Detailed scope of engagement and milestones."
+        }
+      ],
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Product Design Systems Consulting (October 2026)",
+          "quantity": 40,
+          "rate": 175
+        },
+        {
+          "id": "2",
+          "description": "PDF Automation Pipeline Implementation",
+          "quantity": 1,
+          "rate": 4200
+        },
+        {
+          "id": "3",
+          "description": "Dedicated Infrastructure Cloud Provisioning",
+          "quantity": 1,
+          "rate": 850
+        }
+      ],
+      "subtotal": 12050,
+      "taxTotal": 964,
+      "total": 13014,
+      "currency": "USD",
+      "paymentTerms": "Net 30 Days. Late balance subject to 1.5% interest per month.",
+      "recipientName": "",
+      "awardTitle": "",
+      "candidateRole": "",
+      "candidateSkills": [],
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margin": "standard"
+    },
+    {
       "id": "doc-001",
       "title": "Acme Enterprise Migration Proposal",
       "referenceNumber": "PROP-2026-042",
@@ -183,7 +351,7 @@
     }
   ],
   "brandKit": {
-    "companyName": "Acme Advisory Group",
+    "companyName": "Acme Global Technologies",
     "tagline": "Strategic Management & Technology Consulting",
     "logoUrl": "",
     "primaryColor": "#0F3D2E",
@@ -539,6 +707,13 @@
     }
   ],
   "apiKeys": [
+    {
+      "id": "key-mvywad8x",
+      "name": "Automated Production E2E Key",
+      "keyPrefix": "cp_live_9bw3edc...",
+      "createdDate": "2026-11-02",
+      "lastUsed": "Never"
+    },
     {
       "id": "key-1",
       "name": "Production Backend API",

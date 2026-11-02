@@ -18,6 +18,19 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
   const [brandKit, setBrandKit] = useState<BrandKitConfig>(() => getStoredBrandKit());
   const [isSaving, setIsSaving] = useState(false);
 
+  // Dynamic fetch from server API
+  React.useEffect(() => {
+    fetch('/api/v1/brand-kit')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data) {
+          setBrandKit(json.data);
+          saveStoredBrandKit(json.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Sample document to visualize real-time brand application
   const sampleDoc: DocumentData = {
     id: 'sample-brand-doc',

@@ -97,6 +97,20 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState<boolean>(false);
 
+  // Live fetch from backend API if docId is provided
+  useEffect(() => {
+    if (docId) {
+      fetch(`/api/v1/documents/${docId}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.data) {
+            setDoc(json.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [docId]);
+
   // Template Switching & Blank Document
   const handleSwitchTemplate = (tplId: string) => {
     const matched = templates.find(t => t.id === tplId);
@@ -259,15 +273,29 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   };
 
   // Save Document
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    upsertDocument(doc);
-    setTimeout(() => {
-      setIsSaving(false);
-      if (onShowToast) {
-        onShowToast('Document saved', `"${doc.title}" has been saved successfully.`, 'success');
+    try {
+      const exists = getStoredDocumentById(doc.id);
+      if (exists) {
+        await fetch(`/api/v1/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(doc),
+        });
+      } else {
+        await fetch('/api/v1/documents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(doc),
+        });
       }
-    }, 400);
+    } catch {}
+    upsertDocument(doc);
+    setIsSaving(false);
+    if (onShowToast) {
+      onShowToast('Document saved', `"${doc.title}" has been saved successfully.`, 'success');
+    }
   };
 
   // Generate & Download PDF

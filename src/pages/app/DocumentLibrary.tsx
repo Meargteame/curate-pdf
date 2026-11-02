@@ -33,6 +33,19 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
   
+  // Dynamic fetch from server database on mount
+  React.useEffect(() => {
+    fetch('/api/v1/documents')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data && Array.isArray(json.data)) {
+          setDocuments(json.data);
+          saveStoredDocuments(json.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+  
   // Filtering & Sorting State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -63,7 +76,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
   });
 
   // Action handlers
-  const handleDuplicate = (doc: DocumentData) => {
+  const handleDuplicate = async (doc: DocumentData) => {
     const copy: DocumentData = {
       ...doc,
       id: `doc-${Date.now().toString(36)}`,
@@ -73,6 +86,13 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
       updatedAt: new Date().toISOString(),
       status: 'draft',
     };
+    try {
+      await fetch('/api/v1/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(copy),
+      });
+    } catch {}
     const updated = upsertDocument(copy);
     setDocuments(updated);
     if (onShowToast) {
@@ -85,9 +105,17 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
     setNewTitle(doc.title);
   };
 
-  const handleConfirmRename = () => {
+  const handleConfirmRename = async () => {
     if (!docToRename || !newTitle.trim()) return;
-    const updated = upsertDocument({ ...docToRename, title: newTitle.trim() });
+    const updatedDoc = { ...docToRename, title: newTitle.trim(), updatedAt: new Date().toISOString() };
+    try {
+      await fetch(`/api/v1/documents/${docToRename.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedDoc),
+      });
+    } catch {}
+    const updated = upsertDocument(updatedDoc);
     setDocuments(updated);
     setDocToRename(null);
     if (onShowToast) {
@@ -95,8 +123,11 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!docToDelete) return;
+    try {
+      await fetch(`/api/v1/documents/${docToDelete.id}`, { method: 'DELETE' });
+    } catch {}
     const updated = deleteStoredDocument(docToDelete.id);
     setDocuments(updated);
     setDocToDelete(null);
@@ -276,6 +307,18 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
+                            if (onShowToast) onShowToast('Downloading PDF', `Streaming real vector PDF for "${doc.title}"`, 'info');
+                          }}
+                          className="h-8 w-8 text-forest hover:bg-forest-50"
+                          title="Download PDF"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
