@@ -15,7 +15,13 @@ import {
   FileCheck,
   Zap,
   Copy,
-  Check
+  Check,
+  Briefcase,
+  Receipt,
+  BarChart3,
+  Award,
+  UserCheck,
+  ScrollText
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
@@ -255,60 +261,70 @@ document.save("invoice.pdf")`
       </section>
 
       {/* 5-Step Product Demonstration */}
-      <section className="bg-white py-20 border-y border-paper-border">
+      <section className="bg-white py-20 border-y border-paper-border relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
               Intuitive Progression
             </span>
-            <h2 className="text-3xl font-display font-bold text-ink">
+            <h2 className="text-3xl font-display font-extrabold text-ink tracking-tight">
               From structured input to finished document in seconds
             </h2>
-            <p className="text-sm text-slate-500">
-              CuratePDF standardizes document creation across your entire team with a simple, repeatable 5-step workflow.
+            <p className="text-sm text-slate-500 leading-relaxed">
+              CuratePDF standardizes document creation across your organization with a predictable, repeatable 5-step workflow.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="bg-paper-subtle p-5 rounded-card border border-paper-border space-y-3 relative">
-              <span className="text-xs font-bold font-mono text-forest bg-forest-100 px-2 py-0.5 rounded">01</span>
-              <h3 className="font-display font-bold text-sm text-ink">Choose a template</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Start from a proven business proposal, invoice, executive brief, or certificate layout.
-              </p>
-            </div>
-
-            <div className="bg-paper-subtle p-5 rounded-card border border-paper-border space-y-3 relative">
-              <span className="text-xs font-bold font-mono text-forest bg-forest-100 px-2 py-0.5 rounded">02</span>
-              <h3 className="font-display font-bold text-sm text-ink">Add structured data</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Enter recipient details, deliverables, itemized rates, dates, and calculated totals easily.
-              </p>
-            </div>
-
-            <div className="bg-paper-subtle p-5 rounded-card border border-paper-border space-y-3 relative">
-              <span className="text-xs font-bold font-mono text-forest bg-forest-100 px-2 py-0.5 rounded">03</span>
-              <h3 className="font-display font-bold text-sm text-ink">Customize design</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Apply your Brand Kit colors, logo monogram, font presets, and header/footer configurations.
-              </p>
-            </div>
-
-            <div className="bg-paper-subtle p-5 rounded-card border border-paper-border space-y-3 relative">
-              <span className="text-xs font-bold font-mono text-forest bg-forest-100 px-2 py-0.5 rounded">04</span>
-              <h3 className="font-display font-bold text-sm text-ink">Preview live PDF</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Inspect an exact pixel-crisp A4 or Letter page simulation with zoom controls and page breaks.
-              </p>
-            </div>
-
-            <div className="bg-paper-subtle p-5 rounded-card border border-paper-border space-y-3 relative">
-              <span className="text-xs font-bold font-mono text-forest bg-forest-100 px-2 py-0.5 rounded">05</span>
-              <h3 className="font-display font-bold text-sm text-ink">Generate & export</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Download high-resolution PDFs instantly or trigger native print stylesheets for distribution.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5">
+            {[
+              {
+                step: '01',
+                title: 'Choose a template',
+                desc: 'Select from 8 publication-ready business, invoice, report, or certificate layouts.',
+              },
+              {
+                step: '02',
+                title: 'Add structured data',
+                desc: 'Fill client particulars, line items, deliverables, and automated mathematical totals.',
+              },
+              {
+                step: '03',
+                title: 'Apply brand kit',
+                desc: 'Centralized typography, primary hex accents, and company logo apply automatically.',
+              },
+              {
+                step: '04',
+                title: 'Inspect vector preview',
+                desc: 'Simulate exact millimetric A4 page flow, table wrapping, and high-DPI rasterization.',
+              },
+              {
+                step: '05',
+                title: 'Export & distribute',
+                desc: 'Download crisp 300 DPI vector PDFs instantly or stream batches via REST API.',
+              },
+            ].map((item, idx) => (
+              <div
+                key={item.step}
+                className="bg-paper-subtle/50 p-6 rounded-2xl border border-paper-border hover:border-forest/40 hover:bg-white hover:shadow-card transition-all duration-200 flex flex-col justify-between space-y-3 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-mono text-forest bg-forest-100/70 border border-forest-200/60 px-2.5 py-1 rounded-lg">
+                    {item.step}
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-forest transition-colors">
+                    Step {idx + 1}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-sm text-ink group-hover:text-forest transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-1.5">
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -450,64 +466,130 @@ document.save("invoice.pdf")`
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-3 hover:border-slate-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-forest-50 text-forest flex items-center justify-center font-bold">
-              BP
+          <div 
+            onClick={() => navigate('/templates?cat=business')}
+            className="bg-white p-6 rounded-2xl border border-paper-border shadow-card space-y-4 hover:border-forest/40 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-forest-50 text-forest border border-forest-100 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+              <Briefcase className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-base text-ink">Business Proposals & Statements of Work</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Present executive client pitches, milestone delivery schedules, and scope boundaries with clear structured sections.
-            </p>
+            <div>
+              <h3 className="font-display font-bold text-base text-ink group-hover:text-forest transition-colors">
+                Business Proposals & SOWs
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                Present executive client pitches, milestone delivery schedules, and scope boundaries with clear structured sections.
+              </p>
+            </div>
+            <div className="pt-2 text-xs font-semibold text-forest flex items-center gap-1">
+              <span>View proposal templates</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-3 hover:border-slate-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center font-bold">
-              IN
+          <div 
+            onClick={() => navigate('/templates?cat=finance')}
+            className="bg-white p-6 rounded-2xl border border-paper-border shadow-card space-y-4 hover:border-emerald-500/40 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-100 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+              <Receipt className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-base text-ink">Invoices & Financial Statements</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Automatic line-item calculations, tax handling, payment terms, and remittance banking details with zero math errors.
-            </p>
+            <div>
+              <h3 className="font-display font-bold text-base text-ink group-hover:text-emerald-800 transition-colors">
+                Invoices & Financial Statements
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                Automatic line-item calculations, tax handling, payment terms, and remittance banking details with zero math errors.
+              </p>
+            </div>
+            <div className="pt-2 text-xs font-semibold text-emerald-800 flex items-center gap-1">
+              <span>View invoice templates</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-3 hover:border-slate-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-sky-50 text-sky-800 flex items-center justify-center font-bold">
-              RP
+          <div 
+            onClick={() => navigate('/templates?cat=reports')}
+            className="bg-white p-6 rounded-2xl border border-paper-border shadow-card space-y-4 hover:border-sky-500/40 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-800 border border-sky-100 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+              <BarChart3 className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-base text-ink">Executive Operations & KPI Reports</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Consolidate monthly velocity, quarterly objectives, and resource management statistics into clean readable tables.
-            </p>
+            <div>
+              <h3 className="font-display font-bold text-base text-ink group-hover:text-sky-800 transition-colors">
+                Executive & Operations Reports
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                Consolidate monthly velocity, quarterly objectives, and resource management statistics into clean readable tables.
+              </p>
+            </div>
+            <div className="pt-2 text-xs font-semibold text-sky-800 flex items-center gap-1">
+              <span>View report templates</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-3 hover:border-slate-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center font-bold">
-              CT
+          <div 
+            onClick={() => navigate('/templates?cat=certificates')}
+            className="bg-white p-6 rounded-2xl border border-paper-border shadow-card space-y-4 hover:border-amber-500/40 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-800 border border-amber-100 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+              <Award className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-base text-ink">Certificates & Awards</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Award formal certificates of achievement, training completions, and compliance licenses with verification marks.
-            </p>
+            <div>
+              <h3 className="font-display font-bold text-base text-ink group-hover:text-amber-800 transition-colors">
+                Certificates & Accreditations
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                Award formal certificates of achievement, training completions, and compliance licenses with verification marks.
+              </p>
+            </div>
+            <div className="pt-2 text-xs font-semibold text-amber-800 flex items-center gap-1">
+              <span>View certificate templates</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-3 hover:border-slate-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-forest-50 text-forest flex items-center justify-center font-bold">
-              CP
+          <div 
+            onClick={() => navigate('/templates?cat=recruitment')}
+            className="bg-white p-6 rounded-2xl border border-paper-border shadow-card space-y-4 hover:border-purple-500/40 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-800 border border-purple-100 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+              <UserCheck className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-base text-ink">Candidate Profiles & Portfolios</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Recruitment agencies and talent partners can assemble structured executive dossiers and track records quickly.
-            </p>
+            <div>
+              <h3 className="font-display font-bold text-base text-ink group-hover:text-purple-800 transition-colors">
+                Candidate Profiles & Dossiers
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                Recruitment agencies and talent partners can assemble structured executive dossiers and track records quickly.
+              </p>
+            </div>
+            <div className="pt-2 text-xs font-semibold text-purple-800 flex items-center gap-1">
+              <span>View dossier templates</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-3 hover:border-slate-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center font-bold">
-              SA
+          <div 
+            onClick={() => navigate('/templates?cat=business')}
+            className="bg-white p-6 rounded-2xl border border-paper-border shadow-card space-y-4 hover:border-slate-400 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-200 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+              <ScrollText className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-base text-ink">Agreements & Operational Charters</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Standardize master services agreements, non-disclosure contracts, and operational handbooks with formal clauses.
-            </p>
+            <div>
+              <h3 className="font-display font-bold text-base text-ink group-hover:text-slate-900 transition-colors">
+                Agreements & Legal Charters
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                Standardize master services agreements, non-disclosure contracts, and operational handbooks with formal clauses.
+              </p>
+            </div>
+            <div className="pt-2 text-xs font-semibold text-slate-700 flex items-center gap-1">
+              <span>View agreement templates</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
         </div>
       </section>
@@ -581,28 +663,38 @@ document.save("invoice.pdf")`
 
       {/* Final Action Callout */}
       <section className="max-w-5xl mx-auto px-4 sm:px-8 text-center">
-        <div className="bg-white rounded-2xl p-10 sm:p-14 border border-paper-border shadow-doc-lg space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-ink">
-            Start creating consistent, professional PDFs today.
-          </h2>
+        <div className="bg-gradient-to-b from-white to-[#F8FAF9] rounded-3xl p-10 sm:p-16 border border-paper-border shadow-doc-lg space-y-6 relative overflow-hidden">
+          {/* Subtle ambient light */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-forest-100/50 blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-dot-grid opacity-25 pointer-events-none" />
 
-          <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed">
-            Eliminate document formatting headaches. Jump into our live editor and produce your first publication-ready PDF in under two minutes.
-          </p>
+          <div className="relative z-10 space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-forest font-display bg-forest-50 border border-forest-200/80 px-3.5 py-1.5 rounded-full shadow-2xs">
+              Instant Setup • No Credit Card Required
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-display font-extrabold text-ink tracking-tight">
+              Start creating consistent, professional PDFs today
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed pt-1">
+              Eliminate document formatting headaches. Jump into our live editor and produce your first publication-ready PDF in under two minutes.
+            </p>
+          </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5 relative z-10">
             <Button
               variant="primary"
               size="lg"
               onClick={() => navigate('/app/editor')}
               rightIcon={<ArrowRight className="w-4 h-4" />}
+              className="h-12 px-7 text-sm sm:text-base font-bold shadow-md hover:shadow-xl w-full sm:w-auto justify-center"
             >
               Launch Document Editor
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
               onClick={() => navigate('/templates')}
+              className="h-12 px-7 text-sm sm:text-base font-semibold w-full sm:w-auto justify-center border-paper-border hover:bg-slate-50"
             >
               Browse Template Gallery
             </Button>
