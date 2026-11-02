@@ -91,19 +91,21 @@ export const TemplateGallery: React.FC = () => {
         {filteredTemplates.map((tpl) => (
           <div
             key={tpl.id}
-            className="bg-white rounded-card border border-paper-border overflow-hidden shadow-card hover:shadow-card-hover transition-all flex flex-col justify-between group"
+            className="bg-white rounded-2xl border border-paper-border overflow-hidden shadow-card hover:shadow-[0_16px_36px_-6px_rgba(15,61,46,0.16)] hover:-translate-y-1 hover:border-forest/40 transition-all duration-300 flex flex-col justify-between group"
           >
-            {/* Template Top Believable Mini Preview Frame */}
+            {/* Template Top Mini Preview Frame */}
             <div 
-              className="h-44 bg-paper-subtle p-4 relative flex items-center justify-center border-b border-paper-border cursor-pointer overflow-hidden"
+              className="h-48 bg-gradient-to-b from-slate-50 to-slate-100/80 p-5 relative flex items-center justify-center border-b border-paper-border cursor-pointer overflow-hidden"
               onClick={() => setPreviewTemplate(tpl)}
             >
+              <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" />
+
               {/* Scaled paper mockup visual */}
               <div 
-                className="w-44 h-36 bg-white rounded-sm shadow-md border border-slate-200 p-3 flex flex-col justify-between transform group-hover:scale-105 transition-transform duration-200 relative"
+                className="w-48 h-38 bg-white rounded-sm shadow-[0_8px_20px_-3px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.05)] p-3.5 flex flex-col justify-between transform group-hover:scale-105 transition-transform duration-300 relative"
               >
                 {/* Top strip */}
-                <div className="h-1 w-full rounded-full" style={{ backgroundColor: tpl.previewAccent }} />
+                <div className="h-1.5 w-full rounded-full" style={{ backgroundColor: tpl.previewAccent }} />
                 
                 <div className="space-y-1.5 my-auto">
                   <div className="h-2 w-3/4 bg-slate-800 rounded-xs" />
@@ -122,9 +124,9 @@ export const TemplateGallery: React.FC = () => {
               </div>
 
               {/* Hover inspect pill */}
-              <div className="absolute inset-0 bg-forest-950/20 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="bg-white text-forest text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5" /> Quick Preview
+              <div className="absolute inset-0 bg-forest-950/25 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="bg-white text-forest text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                  <Eye className="w-3.5 h-3.5 text-sage" /> Quick Inspect
                 </span>
               </div>
             </div>

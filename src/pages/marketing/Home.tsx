@@ -31,23 +31,33 @@ export const Home: React.FC = () => {
   const currentHeroDoc = heroDocuments[selectedHeroIndex] || heroDocuments[0];
 
   return (
-    <div className="space-y-24 pb-20">
+    <div className="space-y-24 pb-20 relative overflow-hidden">
+      {/* Ambient background glow & grid */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-forest-200/30 via-mint-subtle/40 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute inset-0 bg-dot-grid opacity-50 pointer-events-none -z-10" />
+
       {/* Hero Section */}
       <section className="pt-12 sm:pt-20 px-4 sm:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Value Proposition */}
           <div className="lg:col-span-6 space-y-6 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-50 border border-forest-200 text-forest text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-sage" />
-              <span>Modern Document Automation Platform</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest-50/80 backdrop-blur-md border border-forest-200/80 text-forest text-xs font-semibold shadow-2xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-forest" />
+              </span>
+              <span>CuratePDF 2.0 • Real Vector PDF Engine</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-ink leading-[1.1]">
-              Professional PDFs, without the busywork.
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-ink leading-[1.08]">
+              Professional PDFs,{' '}
+              <span className="bg-gradient-to-r from-forest via-emerald-700 to-mint-dark bg-clip-text text-transparent">
+                engineered for precision.
+              </span>
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
-              Create polished documents from reusable templates and structured information. Apply your brand, preview every detail in real-time, and generate pristine PDFs without repetitive manual formatting.
+              Transform structured data into publication-ready documents. Apply your enterprise brand kit, preview every millimeter in real-time, and download crisp vector PDFs instantly.
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
@@ -56,7 +66,7 @@ export const Home: React.FC = () => {
                 size="lg"
                 onClick={() => navigate('/app/editor')}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
-                className="justify-center"
+                className="justify-center shadow-lg hover:shadow-xl"
               >
                 Create your first PDF
               </Button>
@@ -65,54 +75,76 @@ export const Home: React.FC = () => {
                 size="lg"
                 onClick={() => navigate('/templates')}
                 leftIcon={<FileCode className="w-4 h-4 text-forest" />}
-                className="justify-center"
+                className="justify-center bg-white/60 backdrop-blur-sm"
               >
-                Explore templates
+                Explore 8 templates
               </Button>
             </div>
 
             <div className="pt-6 border-t border-paper-border flex flex-wrap items-center gap-6 text-xs text-slate-500">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-forest" />
-                <span>Instant Vector PDF Download</span>
+                <span>Instant Vector Rendering (2× DPI)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-forest" />
-                <span>Consistent Brand Tokens</span>
+                <span>Centralized Brand Tokens</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-forest" />
-                <span>Zero Manual Layout Software</span>
+                <span>Bulk CSV Batch Generator</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Interactive Real-Time Document Showcase */}
+          {/* Right Column: Interactive Real-Time Document Showcase in Studio Desk */}
           <div className="lg:col-span-6 flex flex-col items-center">
             {/* Interactive Document Switcher Pill Bar */}
-            <div className="w-full mb-3 flex items-center justify-between bg-white p-1 rounded-lg border border-paper-border shadow-card overflow-x-auto">
+            <div className="w-full mb-3 flex items-center justify-between bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-paper-border shadow-2xs overflow-x-auto">
               {heroDocuments.slice(0, 4).map((doc, idx) => (
                 <button
                   key={doc.id}
                   onClick={() => setSelectedHeroIndex(idx)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                     selectedHeroIndex === idx
                       ? 'bg-forest text-white shadow-2xs'
                       : 'text-slate-600 hover:text-ink hover:bg-slate-100'
                   }`}
                 >
-                  {doc.category === 'business' ? 'Proposal' : doc.category === 'finance' ? 'Tax Invoice' : doc.category === 'reports' ? 'Quarterly Report' : 'Dossier'}
+                  {doc.category === 'business' ? 'Executive Proposal' : doc.category === 'finance' ? 'Commercial Invoice' : doc.category === 'reports' ? 'Quarterly Report' : 'Executive Dossier'}
                 </button>
               ))}
             </div>
 
-            {/* Document Preview Frame */}
-            <div className="w-full bg-paper-subtle/80 rounded-2xl p-4 sm:p-6 border border-paper-border shadow-doc-lg flex justify-center items-start overflow-hidden min-h-[580px] sm:min-h-[660px]">
-              <LivePDFCanvas
-                document={currentHeroDoc}
-                brandKit={brandKit}
-                zoom={0.56}
-              />
+            {/* Document Preview Frame: Cool Studio Workbench */}
+            <div className="w-full bg-[#0E151A] rounded-2xl p-4 sm:p-6 border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col items-center min-h-[580px] sm:min-h-[660px]">
+              {/* Top spotlight glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-32 bg-emerald-500/15 blur-3xl pointer-events-none" />
+              <div className="absolute inset-0 bg-dot-grid-dark opacity-40 pointer-events-none" />
+
+              {/* Floating top bar on workbench */}
+              <div className="w-full flex items-center justify-between mb-4 text-slate-400 text-xs px-2 relative z-10">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-mono text-[11px] text-slate-300">Live Canvas Rendering</span>
+                </div>
+                <button
+                  onClick={() => navigate(`/app/editor?id=${currentHeroDoc.id}`)}
+                  className="text-mint hover:underline text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Edit in Studio</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+
+              {/* Document Sheet */}
+              <div className="relative z-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.1)] rounded-sm overflow-hidden transition-all duration-300">
+                <LivePDFCanvas
+                  document={currentHeroDoc}
+                  brandKit={brandKit}
+                  zoom={0.56}
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -77,83 +77,98 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
       {/* Welcome Banner */}
-      <div className="bg-white border border-paper-border rounded-card p-6 sm:p-8 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        {/* Subtle decorative brand motif */}
-        <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-forest-50/70 rounded-full pointer-events-none -z-0" />
+      <div className="bg-gradient-to-br from-[#07241A] via-forest-900 to-[#0F3D2E] text-white border border-forest-800/80 rounded-2xl p-6 sm:p-8 shadow-doc-lg flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        {/* Subtle decorative brand motif & ambient glow */}
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-mint/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute inset-0 bg-dot-grid-dark opacity-20 pointer-events-none" />
 
-        <div className="space-y-1.5 relative z-10">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-forest-50 border border-forest-200 text-forest text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-sage" />
+        <div className="space-y-2 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-800/70 border border-forest-600/60 text-mint text-xs font-semibold shadow-2xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-mint" />
+            </span>
             <span>{brandKit.companyName || userProfile.company} • {userProfile.planStatus || 'Pro Workspace'}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink">
+          <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-white">
             Welcome back, {userProfile.name.split(' ')[0] || 'there'}
           </h1>
-          <p className="text-xs sm:text-sm text-ink-muted max-w-xl">
-            Create, customize, preview, and generate professional documents from reusable templates and your own brand kit.
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+            High-precision document automation engine. Build, preview in real time, and batch-render print-ready vector PDFs.
           </p>
         </div>
 
         <div className="flex items-center gap-3 relative z-10 shrink-0">
           <Button
-            variant="outline"
+            variant="glass"
             size="md"
             onClick={() => navigate('/app/templates')}
-            leftIcon={<FileCode className="w-4 h-4 text-forest" />}
+            leftIcon={<FileCode className="w-4 h-4 text-forest-300" />}
+            className="text-white border-white/20 hover:bg-white/10"
           >
             Browse templates
           </Button>
           <Button
-            variant="primary"
+            variant="mint"
             size="md"
             onClick={() => navigate('/app/editor')}
-            leftIcon={<Plus className="w-4 h-4" />}
+            leftIcon={<Plus className="w-4 h-4 text-forest-950" />}
           >
-            Create document
+            Create PDF
           </Button>
         </div>
       </div>
 
       {/* Metrics / Workspace Activity summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4.5 rounded-card border border-paper-border shadow-card">
+        <div className="bg-white p-5 rounded-2xl border border-paper-border shadow-card hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-display">Total Documents</span>
-            <FileCheck className="w-4 h-4 text-forest" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-display">Total Documents</span>
+            <div className="w-7 h-7 rounded-lg bg-forest-50 text-forest flex items-center justify-center">
+              <FileCheck className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-display font-bold text-ink">{documents.length}</p>
-          <p className="text-[11px] text-slate-500 mt-1">Across all workspace folders</p>
+          <p className="text-3xl font-display font-extrabold text-ink">{documents.length}</p>
+          <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
+            <span>+12%</span> <span className="text-slate-400 font-normal">from last cycle</span>
+          </p>
         </div>
 
-        <div className="bg-white p-4.5 rounded-card border border-paper-border shadow-card">
+        <div className="bg-white p-5 rounded-2xl border border-paper-border shadow-card hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-display">Generated PDFs</span>
-            <Download className="w-4 h-4 text-emerald-600" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-display">Generated PDFs</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Download className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-display font-bold text-ink">{generatedCount}</p>
-          <p className="text-[11px] text-emerald-700 font-medium mt-1">Ready for distribution</p>
+          <p className="text-3xl font-display font-extrabold text-ink">{generatedCount}</p>
+          <p className="text-[11px] text-emerald-700 font-semibold mt-1">Ready for export & print</p>
         </div>
 
-        <div className="bg-white p-4.5 rounded-card border border-paper-border shadow-card">
+        <div className="bg-white p-5 rounded-2xl border border-paper-border shadow-card hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-display">Available Templates</span>
-            <FileCode className="w-4 h-4 text-sage" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-display">Available Templates</span>
+            <div className="w-7 h-7 rounded-lg bg-sage-50 text-sage flex items-center justify-center">
+              <FileCode className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-display font-bold text-ink">{templates.length}</p>
-          <p className="text-[11px] text-slate-500 mt-1">8 categories configured</p>
+          <p className="text-3xl font-display font-extrabold text-ink">{templates.length}</p>
+          <p className="text-[11px] text-slate-500 mt-1">8 design categories</p>
         </div>
 
-        <div className="bg-white p-4.5 rounded-card border border-paper-border shadow-card">
+        <div className="bg-white p-5 rounded-2xl border border-paper-border shadow-card hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-display">Brand Kit</span>
-            <Palette className="w-4 h-4 text-mint-dark" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-display">Brand Tokens</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+              <Palette className="w-4 h-4" />
+            </div>
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <div className="w-5 h-5 rounded border" style={{ backgroundColor: brandKit.primaryColor }} />
-            <span className="text-sm font-semibold text-ink font-display">{brandKit.companyName}</span>
+            <div className="w-5 h-5 rounded-md border shadow-2xs" style={{ backgroundColor: brandKit.primaryColor }} />
+            <span className="text-sm font-semibold text-ink font-display truncate">{brandKit.companyName}</span>
           </div>
-          <NavLink to="/app/brand-kit" className="text-[11px] text-forest font-medium hover:underline block mt-1">
-            Customize Brand →
+          <NavLink to="/app/brand-kit" className="text-[11px] text-forest font-semibold hover:underline block mt-1">
+            Configure Brand Kit →
           </NavLink>
         </div>
       </div>

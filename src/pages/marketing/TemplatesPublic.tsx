@@ -38,17 +38,21 @@ export const TemplatesPublic: React.FC = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 space-y-12 relative overflow-hidden">
+      {/* Ambient background glow & grid */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-b from-forest-200/25 via-mint-subtle/30 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute inset-0 bg-dot-grid opacity-40 pointer-events-none -z-10" />
+
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
-          Document Library
+        <span className="text-xs font-bold uppercase tracking-wider text-forest font-display bg-forest-50 border border-forest-200 px-3 py-1 rounded-full shadow-2xs">
+          Document Template Library
         </span>
-        <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-ink">
+        <h1 className="text-3xl sm:text-5xl font-display font-extrabold text-ink tracking-tight">
           Curated Reusable Document Templates
         </h1>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          Select any template to inspect its composition or launch directly into the live editor with your branding applied.
+          Select any template to inspect its composition or launch directly into the live studio editor with your branding applied.
         </p>
       </div>
 
@@ -85,15 +89,17 @@ export const TemplatesPublic: React.FC = () => {
         {filteredTemplates.map((tpl) => (
           <div
             key={tpl.id}
-            className="bg-white rounded-card border border-paper-border overflow-hidden shadow-card hover:shadow-card-hover transition-all flex flex-col justify-between group"
+            className="bg-white rounded-2xl border border-paper-border overflow-hidden shadow-card hover:shadow-[0_16px_36px_-6px_rgba(15,61,46,0.16)] hover:-translate-y-1 hover:border-forest/40 transition-all duration-300 flex flex-col justify-between group"
           >
             {/* Visual Mini Mockup */}
             <div 
-              className="h-44 bg-paper-subtle p-4 relative flex items-center justify-center border-b border-paper-border cursor-pointer overflow-hidden"
+              className="h-48 bg-gradient-to-b from-slate-50 to-slate-100/80 p-5 relative flex items-center justify-center border-b border-paper-border cursor-pointer overflow-hidden"
               onClick={() => setPreviewTemplate(tpl)}
             >
-              <div className="w-44 h-36 bg-white rounded-sm shadow-md border border-slate-200 p-3 flex flex-col justify-between transform group-hover:scale-105 transition-transform duration-200">
-                <div className="h-1 w-full rounded-full" style={{ backgroundColor: tpl.previewAccent }} />
+              <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" />
+
+              <div className="w-48 h-38 bg-white rounded-sm shadow-[0_8px_20px_-3px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.05)] p-3.5 flex flex-col justify-between transform group-hover:scale-105 transition-transform duration-300">
+                <div className="h-1.5 w-full rounded-full" style={{ backgroundColor: tpl.previewAccent }} />
                 <div className="space-y-1.5 my-auto">
                   <div className="h-2 w-3/4 bg-slate-800 rounded-xs" />
                   <div className="h-1.5 w-1/2 bg-slate-300 rounded-xs" />
@@ -108,9 +114,9 @@ export const TemplatesPublic: React.FC = () => {
                 </div>
               </div>
 
-              <div className="absolute inset-0 bg-forest-950/20 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="bg-white text-forest text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5" /> Full Preview
+              <div className="absolute inset-0 bg-forest-950/25 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="bg-white text-forest text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                  <Eye className="w-3.5 h-3.5 text-sage" /> Full Preview
                 </span>
               </div>
             </div>

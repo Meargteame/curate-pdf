@@ -20,7 +20,9 @@ import {
   ChevronUp,
   FileDown,
   ExternalLink,
-  Layers
+  Layers,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { DocumentData, LineItem, DocumentSection } from '../../types';
 import { 
@@ -105,6 +107,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [showSafetyGuides, setShowSafetyGuides] = useState<boolean>(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState<boolean>(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState<boolean>(false);
+  const [deskTheme, setDeskTheme] = useState<'dark' | 'light'>('dark');
 
   // Global hotkeys (Ctrl+S to save, Ctrl+P to print)
   useEffect(() => {
@@ -1146,60 +1149,101 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
         </div>
 
         {/* Right Live Document Preview Viewport */}
-        <div className={`flex-1 bg-paper-subtle/70 overflow-auto relative flex flex-col ${mobileMode === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`flex-1 overflow-auto relative flex flex-col transition-colors duration-200 ${
+          deskTheme === 'dark' ? 'bg-[#0B0F12]' : 'bg-paper-subtle/70'
+        } ${mobileMode === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* Subtle desk ambient texture */}
+          {deskTheme === 'dark' ? (
+            <>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 bg-emerald-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute inset-0 bg-dot-grid-dark opacity-30 pointer-events-none" />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-dot-grid opacity-40 pointer-events-none" />
+          )}
+
           {/* Zoom & Viewport controls bar */}
-          <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-paper-border px-4 py-2 flex items-center justify-between shadow-2xs">
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-              <span className="font-display font-semibold text-ink">Page 1</span>
-              <span>•</span>
-              <span className="uppercase text-[11px] font-mono">{doc.pageSize} {doc.orientation}</span>
+          <div className={`sticky top-0 z-10 px-4 py-2 flex items-center justify-between border-b transition-colors ${
+            deskTheme === 'dark'
+              ? 'bg-[#11171C]/90 backdrop-blur-md border-white/[0.08] text-slate-200'
+              : 'bg-white/85 backdrop-blur-sm border-paper-border text-slate-500 shadow-2xs'
+          }`}>
+            <div className="flex items-center gap-2 text-xs font-medium">
+              <span className={`font-display font-semibold ${deskTheme === 'dark' ? 'text-white' : 'text-ink'}`}>Page 1</span>
+              <span className="opacity-40">•</span>
+              <span className="uppercase text-[11px] font-mono opacity-75">{doc.pageSize} {doc.orientation}</span>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-paper-subtle p-1 rounded-lg border border-paper-border">
-              <button
-                onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
-                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink"
-                title="Zoom Out"
-              >
-                <ZoomOut className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-xs font-mono font-medium text-ink px-1.5 min-w-[42px] text-center">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button
-                onClick={() => setZoom(prev => Math.min(1.3, prev + 0.1))}
-                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink"
-                title="Zoom In"
-              >
-                <ZoomIn className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setZoom(0.85)}
-                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink text-[11px] font-semibold px-1"
-                title="Reset zoom"
-              >
-                Fit
-              </button>
-              <div className="h-3.5 w-px bg-paper-border mx-0.5" />
+            <div className="flex items-center gap-2">
+              {/* Studio Desk Mode Switcher */}
               <button
                 type="button"
-                onClick={() => setIsFullscreenPreview(true)}
-                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink"
-                title="Fullscreen Preview"
+                onClick={() => setDeskTheme(deskTheme === 'dark' ? 'light' : 'dark')}
+                className={`p-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  deskTheme === 'dark'
+                    ? 'bg-slate-800/80 border-slate-700 text-amber-400 hover:bg-slate-800'
+                    : 'bg-white border-paper-border text-slate-600 hover:bg-paper-warm'
+                }`}
+                title={`Switch to ${deskTheme === 'dark' ? 'Light' : 'Dark'} Studio Desk`}
               >
-                <Maximize2 className="w-3.5 h-3.5" />
+                {deskTheme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                <span className="text-[11px] font-medium hidden sm:inline">{deskTheme === 'dark' ? 'Dark Desk' : 'Light Desk'}</span>
               </button>
+
+              <div className={`flex items-center gap-1.5 p-1 rounded-lg border ${
+                deskTheme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-paper-subtle border-paper-border text-slate-600'
+              }`}>
+                <button
+                  onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
+                  className="p-1 rounded hover:bg-white/20 hover:text-white"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-xs font-mono font-medium px-1.5 min-w-[42px] text-center">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button
+                  onClick={() => setZoom(prev => Math.min(1.3, prev + 0.1))}
+                  className="p-1 rounded hover:bg-white/20 hover:text-white"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setZoom(0.85)}
+                  className="p-1 rounded hover:bg-white/20 text-[11px] font-semibold px-1"
+                  title="Reset zoom"
+                >
+                  Fit
+                </button>
+                <div className="h-3.5 w-px bg-slate-700 mx-0.5" />
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenPreview(true)}
+                  className="p-1 rounded hover:bg-white/20"
+                  title="Fullscreen Preview"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Canvas Scroll Area */}
-          <div className="flex-1 p-6 sm:p-10 flex justify-center items-start overflow-auto">
-            <LivePDFCanvas
-              document={doc}
-              brandKit={brandKit}
-              zoom={zoom}
-              showSafetyGuides={showSafetyGuides}
-            />
+          <div className="flex-1 p-6 sm:p-10 flex justify-center items-start overflow-auto relative z-0">
+            <div className={`transition-all duration-300 ${
+              deskTheme === 'dark'
+                ? 'shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.12)]'
+                : 'shadow-sheet'
+            }`}>
+              <LivePDFCanvas
+                document={doc}
+                brandKit={brandKit}
+                zoom={zoom}
+                showSafetyGuides={showSafetyGuides}
+              />
+            </div>
           </div>
         </div>
       </div>
