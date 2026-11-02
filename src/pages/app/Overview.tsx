@@ -20,6 +20,7 @@ import {
   saveStoredDocuments,
   getStoredTemplates, 
   getStoredBrandKit,
+  getStoredUserProfile,
   upsertDocument
 } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
@@ -33,6 +34,7 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
   const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
   const templates = getStoredTemplates();
   const brandKit = getStoredBrandKit();
+  const userProfile = getStoredUserProfile();
 
   // Dynamic live fetch from server database
   React.useEffect(() => {
@@ -82,10 +84,10 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
         <div className="space-y-1.5 relative z-10">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-forest-50 border border-forest-200 text-forest text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-sage" />
-            <span>CuratePDF Workspace</span>
+            <span>{brandKit.companyName || userProfile.company} • {userProfile.planStatus || 'Pro Workspace'}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink">
-            Welcome back to CuratePDF
+            Welcome back, {userProfile.name.split(' ')[0] || 'there'}
           </h1>
           <p className="text-xs sm:text-sm text-ink-muted max-w-xl">
             Create, customize, preview, and generate professional documents from reusable templates and your own brand kit.

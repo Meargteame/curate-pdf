@@ -140,11 +140,19 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
               />
             </div>
 
-            <Input
-              label="Website URL"
-              value={brandKit.website}
-              onChange={(e) => setBrandKit({ ...brandKit, website: e.target.value })}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Website URL"
+                value={brandKit.website}
+                onChange={(e) => setBrandKit({ ...brandKit, website: e.target.value })}
+              />
+              <Input
+                label="Tax ID / VAT Registration #"
+                value={brandKit.taxId || ''}
+                onChange={(e) => setBrandKit({ ...brandKit, taxId: e.target.value })}
+                placeholder="e.g. US-EIN-94821038"
+              />
+            </div>
 
             <Textarea
               label="Physical Address / Remittance Headquarters"
@@ -152,6 +160,72 @@ export const BrandKit: React.FC<{ onShowToast?: (title: string, message?: string
               value={brandKit.address}
               onChange={(e) => setBrandKit({ ...brandKit, address: e.target.value })}
             />
+
+            <Input
+              label="Default Payment Terms / Bank Wire"
+              value={brandKit.paymentDetails || ''}
+              onChange={(e) => setBrandKit({ ...brandKit, paymentDetails: e.target.value })}
+              placeholder="e.g. Net 30. Wire: First Republic Bank, Routing #121000358"
+            />
+          </div>
+
+          {/* Logo Upload Section */}
+          <div className="bg-white p-5 rounded-card border border-paper-border shadow-card space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+                  Corporate Logo
+                </h3>
+                <p className="text-xs text-slate-500">Vector SVG or transparent PNG rendered in document headers</p>
+              </div>
+              {brandKit.logoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setBrandKit({ ...brandKit, logoUrl: '' })}
+                  className="text-xs text-red-600 hover:text-red-700 font-medium"
+                >
+                  Remove logo
+                </button>
+              )}
+            </div>
+
+            {brandKit.logoUrl ? (
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-paper-subtle border border-paper-border">
+                <img 
+                  src={brandKit.logoUrl} 
+                  alt="Uploaded Logo" 
+                  className="h-12 max-w-[180px] object-contain rounded bg-white p-2 border border-slate-200 shadow-2xs"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-ink truncate">Custom Brand Logo Active</p>
+                  <p className="text-[11px] text-slate-500">Rendered across all generated PDFs and previews</p>
+                </div>
+              </div>
+            ) : (
+              <label className="border-2 border-dashed border-paper-border hover:border-forest/50 bg-paper-subtle/40 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors group">
+                <div className="w-10 h-10 rounded-full bg-forest-50 text-forest flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                  <Upload className="w-5 h-5 text-sage" />
+                </div>
+                <p className="text-xs font-semibold text-ink">Upload your logo file</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">PNG, SVG, or JPG (max 2MB)</p>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const base64 = event.target?.result as string;
+                        setBrandKit(prev => ({ ...prev, logoUrl: base64 }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            )}
           </div>
 
           {/* Color Palettes Section */}

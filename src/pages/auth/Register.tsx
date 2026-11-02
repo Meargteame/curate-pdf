@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ArrowRight, Lock, Mail, Building2, User } from 'lucide-react';
+import { ArrowRight, Lock, Mail, Building2, User, ShieldCheck } from 'lucide-react';
 import { Logo } from '../../components/brand/Logo';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { getStoredBrandKit, saveStoredBrandKit, saveStoredUserProfile } from '../../utils/storage';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -11,22 +12,51 @@ export const Register: React.FC = () => {
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/app');
+    setIsLoading(true);
+
+    const userName = name.trim() || 'Workspace Admin';
+    const orgName = company.trim() || 'My Organization';
+    const userEmail = email.trim() || 'admin@example.com';
+
+    // Update user profile in storage
+    saveStoredUserProfile({
+      name: userName,
+      email: userEmail,
+      company: orgName,
+      role: 'Workspace Administrator',
+      plan: 'pro',
+      planStatus: 'Active (14-day Pro Trial)',
+      documentsQuota: 500,
+    });
+
+    // Update BrandKit company name
+    const currentBrand = getStoredBrandKit();
+    saveStoredBrandKit({
+      ...currentBrand,
+      companyName: orgName,
+      email: userEmail,
+    });
+
+    setTimeout(() => {
+      setIsLoading(false);
+      navigate('/app');
+    }, 450);
   };
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-4">
-        <NavLink to="/" className="inline-block">
+    <div className="min-h-screen bg-paper flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 antialiased">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
+        <NavLink to="/" className="inline-block hover:opacity-90 transition-opacity">
           <Logo size="xl" />
         </NavLink>
-        <h2 className="text-2xl font-display font-bold text-ink">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink">
           Create your CuratePDF workspace
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs sm:text-sm text-slate-500">
           Already have an account?{' '}
           <NavLink to="/login" className="font-semibold text-forest hover:underline">
             Sign in
@@ -34,8 +64,8 @@ export const Register: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-paper-border shadow-doc-lg space-y-6">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-paper-border shadow-doc-lg space-y-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Your Full Name"
@@ -75,14 +105,20 @@ export const Register: React.FC = () => {
               required
             />
 
+            <div className="text-xs text-slate-500 bg-forest-50/50 p-3 rounded-lg border border-forest-100 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-forest shrink-0" />
+              <span>Includes 14-day full access trial of Professional features. No credit card required.</span>
+            </div>
+
             <Button
               type="submit"
               variant="primary"
               size="md"
+              loading={isLoading}
               className="w-full justify-center mt-2"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Get Started for Free
+              Launch Organization Workspace
             </Button>
           </form>
 

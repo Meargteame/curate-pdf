@@ -14,10 +14,13 @@ export interface BrandKitConfig {
   companyName: string;
   tagline: string;
   logoUrl?: string;
+  signatureUrl?: string;
+  taxId?: string;
+  paymentDetails?: string;
   primaryColor: string; // Deep Forest #0F3D2E default
   accentColor: string;  // Sage #3A7D5F or Mint #A7C957
-  fontHeading: 'Sora' | 'Inter' | 'Serif' | 'Mono';
-  fontBody: 'Inter' | 'System' | 'Serif';
+  fontHeading: 'Sora' | 'Inter' | 'Serif' | 'Mono' | string;
+  fontBody: 'Inter' | 'System' | 'Serif' | string;
   website: string;
   email: string;
   phone: string;
@@ -66,7 +69,9 @@ export interface DocumentData {
   // Financial / table items
   lineItems?: LineItem[];
   subtotal?: number;
+  taxPercent?: number;
   taxTotal?: number;
+  discountPercent?: number;
   discountTotal?: number;
   total?: number;
   currency?: string;
@@ -121,4 +126,14 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
   title: string;
   message?: string;
+}
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  company: string;
+  role: string;
+  plan: 'free' | 'pro' | 'team';
+  planStatus: string;
+  documentsQuota: number;
 }

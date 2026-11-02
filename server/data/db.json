@@ -1,6 +1,25 @@
 {
   "documents": [
     {
+      "title": "Automated Tax Invoice",
+      "referenceNumber": "INV-API-8801",
+      "templateId": "tpl-invoice-minimal",
+      "category": "finance",
+      "clientCompany": "Stripe Global Services",
+      "total": 4250,
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "API Infrastructure Capacity",
+          "quantity": 1,
+          "rate": 4250
+        }
+      ],
+      "id": "doc-mvyxscep",
+      "createdAt": "2026-11-02T07:27:42.289Z",
+      "updatedAt": "2026-11-02T07:27:42.290Z"
+    },
+    {
       "id": "doc-mvywa4fo",
       "title": "Q4 Strategic Advisory Invoice #9842 (Copy)",
       "referenceNumber": "INV-2026-089-COPY",

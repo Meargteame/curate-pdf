@@ -7,6 +7,7 @@ interface LivePDFCanvasProps {
   document: DocumentData;
   brandKit: BrandKitConfig;
   zoom?: number; // 0.75, 1, 1.25
+  showSafetyGuides?: boolean;
   className?: string;
   id?: string;
 }
@@ -15,6 +16,7 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
   document: doc,
   brandKit,
   zoom = 1,
+  showSafetyGuides = false,
   className,
   id = 'printable-document-canvas',
 }) => {
@@ -66,6 +68,15 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
           />
         )}
 
+        {/* Print Safety Margin Guides Overlay */}
+        {showSafetyGuides && (
+          <div className="absolute inset-8 sm:inset-10 border border-dashed border-emerald-500/60 pointer-events-none z-30 flex items-start justify-end p-2">
+            <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50/90 px-1.5 py-0.5 rounded border border-emerald-300 shadow-2xs">
+              Safe Margin Area (15mm)
+            </span>
+          </div>
+        )}
+
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
@@ -73,12 +84,20 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
             <div className="flex items-start justify-between pb-8 border-b border-slate-200">
               <div className="flex items-center gap-3">
                 {showLogo && (
-                  <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-display font-bold text-lg shadow-sm"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    {companyName.slice(0, 2).toUpperCase()}
-                  </div>
+                  (doc.customBranding?.logoUrl || brandKit.logoUrl) ? (
+                    <img 
+                      src={doc.customBranding?.logoUrl || brandKit.logoUrl} 
+                      alt={companyName}
+                      className="h-10 max-w-[140px] object-contain rounded"
+                    />
+                  ) : (
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-display font-bold text-lg shadow-sm"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {companyName.slice(0, 2).toUpperCase()}
+                    </div>
+                  )
                 )}
                 <div>
                   <h2 className="text-sm font-bold tracking-tight text-ink font-display">{companyName}</h2>

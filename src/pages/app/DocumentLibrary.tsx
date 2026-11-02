@@ -14,7 +14,11 @@ import {
   FileText,
   MoreVertical,
   Check,
-  FolderOpen
+  FolderOpen,
+  Tag,
+  Archive,
+  X,
+  ExternalLink
 } from 'lucide-react';
 import { DocumentData, DocumentCategory, DocumentStatus } from '../../types';
 import { 
@@ -52,11 +56,79 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'updated' | 'title' | 'date'>('updated');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
 
   // Dialog states for Rename & Delete confirmation
   const [docToRename, setDocToRename] = useState<DocumentData | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [docToDelete, setDocToDelete] = useState<DocumentData | null>(null);
+
+  // Bulk deletion handler
+  const handleBulkDelete = async () => {
+    if (selectedDocIds.length === 0) return;
+    for (const id of selectedDocIds) {
+      try {
+        await fetch(`/api/v1/documents/${id}`, { method: 'DELETE' });
+      } catch {}
+    }
+    const updated = documents.filter(d => !selectedDocIds.includes(d.id));
+    saveStoredDocuments(updated);
+    setDocuments(updated);
+    if (onShowToast) {
+      onShowToast('Documents Deleted', `Removed ${selectedDocIds.length} documents from workspace.`, 'info');
+    }
+    setSelectedDocIds([]);
+  };
+
+  // Bulk ZIP download handler
+  const handleBulkDownloadZip = async () => {
+    if (selectedDocIds.length === 0) return;
+    if (onShowToast) onShowToast('Compiling ZIP', `Packaging ${selectedDocIds.length} documents into an archive...`, 'info');
+    try {
+      const selectedDocs = documents.filter(d => selectedDocIds.includes(d.id));
+      const records = selectedDocs.map(d => ({
+        client: d.clientCompany || d.clientName || 'Internal Client',
+        reference: d.referenceNumber,
+        amount: d.total ? `$${d.total.toLocaleString()}` : '$0.00',
+        date: d.date,
+        summary: d.title,
+      }));
+      const res = await fetch('/api/v1/jobs/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId: selectedDocs[0]?.templateId || 'tpl-invoice-minimal',
+          records,
+        }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `curatepdf_export_${new Date().toISOString().split('T')[0]}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        if (onShowToast) onShowToast('ZIP Downloaded', `Successfully downloaded archive of ${selectedDocIds.length} documents.`, 'success');
+      }
+    } catch {
+      if (onShowToast) onShowToast('Download Failed', 'Could not assemble ZIP archive.', 'error');
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedDocIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocIds.length === filteredDocs.length) {
+      setSelectedDocIds([]);
+    } else {
+      setSelectedDocIds(filteredDocs.map(d => d.id));
+    }
+  };
 
   // Filter logic
   const filteredDocs = documents.filter(doc => {
@@ -152,6 +224,33 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
         >
           Create document
         </Button>
+      </div>
+
+      {/* Quick Status Category Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {[
+          { id: 'all', label: 'All Documents', count: documents.length },
+          { id: 'ready', label: 'Ready for Review', count: documents.filter(d => d.status === 'ready').length },
+          { id: 'generated', label: 'Generated PDFs', count: documents.filter(d => d.status === 'generated').length },
+          { id: 'draft', label: 'Drafts', count: documents.filter(d => d.status === 'draft').length },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setSelectedStatus(tab.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 shrink-0 ${
+              selectedStatus === tab.id
+                ? 'bg-forest text-white font-semibold shadow-xs'
+                : 'bg-white border border-paper-border text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <span>{tab.label}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+              selectedStatus === tab.id ? 'bg-forest-900/50 text-white' : 'bg-slate-100 text-slate-500'
+            }`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Filter and Search Bar */}
@@ -264,6 +363,14 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
             <table className="w-full text-left text-xs">
               <thead className="bg-paper-subtle border-b border-paper-border text-slate-500">
                 <tr>
+                  <th className="py-3 px-4 w-10">
+                    <input 
+                      type="checkbox"
+                      checked={filteredDocs.length > 0 && selectedDocIds.length === filteredDocs.length}
+                      onChange={handleSelectAll}
+                      className="rounded border-paper-border text-forest focus:ring-forest cursor-pointer"
+                    />
+                  </th>
                   <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Title & Recipient</th>
                   <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Category</th>
                   <th className="py-3 px-4 font-semibold uppercase tracking-wider text-[11px]">Reference</th>
@@ -276,6 +383,14 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
               <tbody className="divide-y divide-paper-border text-slate-700">
                 {filteredDocs.map((doc) => (
                   <tr key={doc.id} className="hover:bg-paper-subtle/40 transition-colors">
+                    <td className="py-3.5 px-4 w-10">
+                      <input 
+                        type="checkbox"
+                        checked={selectedDocIds.includes(doc.id)}
+                        onChange={() => handleToggleSelect(doc.id)}
+                        className="rounded border-paper-border text-forest focus:ring-forest cursor-pointer"
+                      />
+                    </td>
                     <td className="py-3.5 px-4 font-medium text-ink">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded bg-forest-50 text-forest flex items-center justify-center shrink-0 border border-forest-100">
@@ -341,10 +456,10 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpenRename(doc)}
-                          className="h-8 w-8 text-slate-500 hover:text-ink text-[11px]"
-                          title="Rename"
+                          className="h-8 w-8 text-slate-500 hover:text-ink"
+                          title="Rename Document"
                         >
-                          RN
+                          <Tag className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -369,57 +484,92 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           {filteredDocs.map((doc) => (
             <div
               key={doc.id}
-              className="bg-white rounded-card border border-paper-border p-5 shadow-card hover:shadow-card-hover transition-all flex flex-col justify-between"
+              className="bg-white rounded-card border border-paper-border overflow-hidden shadow-card hover:shadow-card-hover transition-all flex flex-col justify-between group"
             >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <Badge status={doc.status} size="sm" />
-                  <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase">
-                    {doc.pageSize} • {doc.category}
-                  </span>
-                </div>
-
-                <NavLink
-                  to={`/app/editor?id=${doc.id}`}
-                  className="font-display font-bold text-base text-ink hover:text-forest transition-colors block leading-tight"
-                >
-                  {doc.title}
-                </NavLink>
-
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                  {doc.summary || `${doc.referenceNumber} prepared for ${doc.clientCompany || 'Internal'}`}
-                </p>
-
-                {doc.total && (
-                  <div className="mt-4 pt-3 border-t border-paper-border flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Document Total</span>
-                    <span className="font-bold text-forest font-mono text-sm">${doc.total.toLocaleString()}</span>
+              {/* Top Document Paper Header Visual */}
+              <div 
+                className="h-28 bg-paper-subtle p-4 border-b border-paper-border flex flex-col justify-between relative cursor-pointer"
+                onClick={() => navigate(`/app/editor?id=${doc.id}`)}
+              >
+                <div className="h-1.5 w-full rounded-full bg-forest" />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                      {doc.referenceNumber}
+                    </span>
+                    <Badge status={doc.status} size="sm" />
                   </div>
-                )}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="capitalize">{doc.category}</span>
+                  <span className="font-mono">{doc.pageSize}</span>
+                </div>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-paper-border flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">
-                  {new Date(doc.updatedAt).toLocaleDateString()}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDuplicate(doc)}
-                    className="h-7 w-7 text-slate-500"
-                    title="Duplicate"
+              {/* Card Body */}
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <NavLink
+                    to={`/app/editor?id=${doc.id}`}
+                    className="font-display font-bold text-base text-ink group-hover:text-forest transition-colors block leading-tight"
                   >
-                    <Copy className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/app/editor?id=${doc.id}`)}
-                    className="h-7 px-2.5 text-xs text-forest"
-                  >
-                    Edit & Export
-                  </Button>
+                    {doc.title}
+                  </NavLink>
+
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                    {doc.summary || `Document prepared for ${doc.clientCompany || doc.clientName || 'Internal Client'}`}
+                  </p>
+
+                  <div className="mt-3 pt-2.5 border-t border-paper-border flex items-center justify-between text-xs">
+                    <span className="text-slate-400 font-medium">Recipient</span>
+                    <span className="font-semibold text-ink truncate max-w-[150px]">
+                      {doc.clientCompany || doc.clientName || 'Internal'}
+                    </span>
+                  </div>
+
+                  {doc.total ? (
+                    <div className="mt-2 flex items-center justify-between text-xs">
+                      <span className="text-slate-400 font-medium">Document Total</span>
+                      <span className="font-bold text-forest font-mono text-sm">${doc.total.toLocaleString()}</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="pt-3 border-t border-paper-border flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {new Date(doc.updatedAt).toLocaleDateString()}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
+                        onShowToast?.('Downloading PDF', `Streaming vector PDF for "${doc.title}"`, 'info');
+                      }}
+                      className="h-7 w-7 text-forest hover:bg-forest-50"
+                      title="Download PDF"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDuplicate(doc)}
+                      className="h-7 w-7 text-slate-500 hover:text-ink"
+                      title="Duplicate"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/app/editor?id=${doc.id}`)}
+                      className="h-7 px-2.5 text-xs text-forest font-semibold"
+                    >
+                      Edit
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -477,6 +627,41 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           </div>
         )}
       </Dialog>
+
+      {/* Floating Bulk Action Bar */}
+      {selectedDocIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <span className="text-xs font-semibold">
+            {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} selected
+          </span>
+          <div className="h-4 w-px bg-slate-700" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkDownloadZip}
+            className="h-7 text-xs bg-slate-800 text-slate-200 border-slate-600 hover:bg-slate-700 hover:text-white"
+            leftIcon={<Archive className="w-3.5 h-3.5 text-sage" />}
+          >
+            Download ZIP
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkDelete}
+            className="h-7 text-xs bg-transparent text-red-400 border-red-500/50 hover:bg-red-950/40 hover:text-red-300"
+          >
+            Delete Selected
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedDocIds([])}
+            className="h-7 text-xs text-slate-300 hover:text-white"
+          >
+            Clear
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

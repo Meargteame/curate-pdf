@@ -13,9 +13,14 @@ import {
   ZoomIn, 
   ZoomOut, 
   Maximize2,
+  Minimize2,
   CheckCircle,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  ChevronUp,
+  FileDown,
+  ExternalLink,
+  Layers
 } from 'lucide-react';
 import { DocumentData, LineItem, DocumentSection } from '../../types';
 import { 
@@ -96,6 +101,25 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState<boolean>(false);
+  const [saveState, setSaveState] = useState<'saved' | 'unsaved' | 'saving'>('saved');
+  const [showSafetyGuides, setShowSafetyGuides] = useState<boolean>(false);
+  const [isFullscreenPreview, setIsFullscreenPreview] = useState<boolean>(false);
+  const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState<boolean>(false);
+
+  // Global hotkeys (Ctrl+S to save, Ctrl+P to print)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        triggerNativePrint();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [doc]);
 
   // Live fetch from backend API if docId is provided
   useEffect(() => {
@@ -194,18 +218,27 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
     reader.readAsText(file);
   };
 
-  // Recalculate totals whenever lineItems change
+  // Recalculate totals whenever lineItems, taxPercent, or discountPercent change
   useEffect(() => {
     if (doc.lineItems && doc.lineItems.length > 0) {
       const sub = doc.lineItems.reduce((acc, item) => acc + (Number(item.quantity) || 0) * (Number(item.rate) || 0), 0);
-      const tax = doc.taxTotal !== undefined ? doc.taxTotal : 0;
+      const discount = doc.discountPercent ? Math.round((sub * doc.discountPercent) / 100) : (doc.discountTotal || 0);
+      const afterDiscount = Math.max(0, sub - discount);
+      const tax = doc.taxPercent ? Math.round((afterDiscount * doc.taxPercent) / 100) : (doc.taxTotal || 0);
+      const grandTotal = afterDiscount + tax;
       setDoc(prev => ({
         ...prev,
         subtotal: sub,
-        total: sub + tax,
+        discountTotal: discount,
+        taxTotal: tax,
+        total: grandTotal,
       }));
     }
-  }, [doc.lineItems?.map(i => `${i.quantity}-${i.rate}`).join(',')]);
+  }, [
+    doc.lineItems?.map(i => `${i.quantity}-${i.rate}`).join(','),
+    doc.taxPercent,
+    doc.discountPercent,
+  ]);
 
   // Handlers for Line Items
   const handleAddLineItem = () => {
@@ -219,6 +252,18 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
       ...prev,
       lineItems: [...(prev.lineItems || []), newItem],
     }));
+    setSaveState('unsaved');
+  };
+
+  const handleMoveLineItem = (index: number, direction: 'up' | 'down') => {
+    if (!doc.lineItems) return;
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= doc.lineItems.length) return;
+    const updated = [...doc.lineItems];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(target, 0, moved);
+    setDoc(prev => ({ ...prev, lineItems: updated }));
+    setSaveState('unsaved');
   };
 
   const handleUpdateLineItem = (id: string, field: keyof LineItem, value: any) => {
@@ -275,6 +320,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   // Save Document
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveState('saving');
     try {
       const exists = getStoredDocumentById(doc.id);
       if (exists) {
@@ -293,6 +339,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
     } catch {}
     upsertDocument(doc);
     setIsSaving(false);
+    setSaveState('saved');
     if (onShowToast) {
       onShowToast('Document saved', `"${doc.title}" has been saved successfully.`, 'success');
     }
@@ -329,15 +376,15 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] -m-4 sm:-m-8">
+    <div className="flex flex-col h-full w-full bg-paper overflow-hidden">
       {/* Top Action Subheader */}
-      <div className="bg-white border-b border-paper-border px-4 sm:px-6 py-3 flex items-center justify-between shrink-0 shadow-2xs z-20">
+      <div className="bg-white border-b border-paper-border px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-2xs z-20">
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => navigate('/app/documents')}
-            className="text-slate-500 hover:text-ink -ml-2"
+            className="text-slate-500 hover:text-ink -ml-2 h-8"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             <span className="hidden sm:inline">Back</span>
@@ -350,12 +397,36 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               <input
                 type="text"
                 value={doc.title}
-                onChange={(e) => setDoc({ ...doc, title: e.target.value })}
+                onChange={(e) => {
+                  setDoc({ ...doc, title: e.target.value });
+                  setSaveState('unsaved');
+                }}
                 className="font-display font-bold text-sm sm:text-base text-ink bg-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-forest px-1.5 py-0.5 rounded border border-transparent hover:border-paper-border transition-colors w-48 sm:w-80"
                 placeholder="Document Title"
               />
               <Badge status={doc.status} size="sm" className="hidden md:inline-flex" />
+              
+              {/* Cloud Save Indicator */}
+              {saveState === 'saved' && (
+                <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Saved
+                </span>
+              )}
+              {saveState === 'unsaved' && (
+                <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  Unsaved changes
+                </span>
+              )}
+              {saveState === 'saving' && (
+                <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] text-forest font-semibold bg-forest-50 px-2 py-0.5 rounded-full border border-forest-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-forest animate-ping" />
+                  Saving...
+                </span>
+              )}
             </div>
+            
             <div className="flex items-center gap-2 pl-1.5">
               <span className="text-[11px] text-slate-400 font-mono">
                 {doc.referenceNumber} • {doc.category}
@@ -370,8 +441,38 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Controls & Currency */}
         <div className="flex items-center gap-2">
+          {/* Currency Switcher */}
+          <select
+            value={doc.currency || 'USD'}
+            onChange={(e) => {
+              setDoc({ ...doc, currency: e.target.value });
+              setSaveState('unsaved');
+            }}
+            className="h-8 px-2 rounded-lg border border-paper-border bg-paper-subtle text-xs font-mono font-medium text-slate-700 hidden md:block"
+            title="Document Currency"
+          >
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="CAD">CAD ($)</option>
+            <option value="AUD">AUD ($)</option>
+            <option value="JPY">JPY (¥)</option>
+          </select>
+
+          {/* Safety Guides Toggle */}
+          <button
+            onClick={() => setShowSafetyGuides(!showSafetyGuides)}
+            className={`h-8 px-2.5 rounded-lg border text-xs font-medium hidden xl:inline-flex items-center gap-1.5 transition-colors ${
+              showSafetyGuides ? 'bg-forest-50 border-forest text-forest font-semibold' : 'bg-white border-paper-border text-slate-500 hover:text-ink'
+            }`}
+            title="Toggle print safety margin guides"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Margins</span>
+          </button>
+
           {/* Mobile Edit/Preview switch */}
           <div className="lg:hidden flex bg-paper-subtle p-0.5 rounded-lg border border-paper-border">
             <button
@@ -394,7 +495,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             onClick={handleSave}
             loading={isSaving}
             leftIcon={<Save className="w-3.5 h-3.5" />}
-            className="text-xs hidden sm:inline-flex"
+            className="text-xs h-8 hidden sm:inline-flex"
           >
             Save Draft
           </Button>
@@ -404,21 +505,83 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             size="sm"
             onClick={triggerNativePrint}
             leftIcon={<Printer className="w-3.5 h-3.5" />}
-            className="text-xs hidden md:inline-flex"
+            className="text-xs h-8 hidden md:inline-flex"
           >
             Print
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleDownloadPDF}
-            loading={isGenerating}
-            leftIcon={<Download className="w-3.5 h-3.5" />}
-            className="text-xs font-semibold"
-          >
-            Download PDF
-          </Button>
+          {/* Download PDF Split Dropdown */}
+          <div className="relative">
+            <div className="inline-flex rounded-lg shadow-2xs">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleDownloadPDF}
+                loading={isGenerating}
+                leftIcon={<Download className="w-3.5 h-3.5" />}
+                className="text-xs font-semibold h-8 rounded-r-none"
+              >
+                Download PDF
+              </Button>
+              <button
+                type="button"
+                onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                className="px-2 bg-forest hover:bg-forest-900 text-mint border-l border-forest-800 rounded-r-lg flex items-center justify-center transition-colors focus:outline-hidden"
+                aria-label="Download options"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {isDownloadMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-paper-border py-1.5 z-50 animate-in fade-in duration-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDownloadMenuOpen(false);
+                    handleDownloadPDF();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group"
+                >
+                  <div>
+                    <p className="font-semibold text-ink group-hover:text-forest">Client Vector PDF</p>
+                    <p className="text-[11px] text-slate-400">Instant in-browser rendering (2× DPI)</p>
+                  </div>
+                  <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDownloadMenuOpen(false);
+                    upsertDocument({ ...doc, status: 'generated' });
+                    window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
+                    onShowToast?.('PDF Streaming', `Opened server vector PDF for ${doc.title}`, 'success');
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group border-t border-paper-border"
+                >
+                  <div>
+                    <p className="font-semibold text-ink group-hover:text-forest">Server Vector PDF</p>
+                    <p className="text-[11px] text-slate-400">Backend engine, print-ready 300 DPI</p>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDownloadMenuOpen(false);
+                    triggerNativePrint();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group border-t border-paper-border"
+                >
+                  <div>
+                    <p className="font-semibold text-ink group-hover:text-forest">System Print Dialog</p>
+                    <p className="text-[11px] text-slate-400">Save to PDF or send to local printer</p>
+                  </div>
+                  <Printer className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -552,50 +715,139 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                     </Button>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {doc.lineItems.map((item, idx) => (
-                      <div key={item.id} className="p-2.5 rounded-lg border border-paper-border bg-paper-subtle/50 space-y-2">
+                      <div key={item.id} className="p-3 rounded-xl border border-paper-border bg-paper-subtle/50 space-y-2 hover:border-slate-300 transition-colors">
                         <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveLineItem(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 rounded text-slate-400 hover:text-ink disabled:opacity-30 disabled:pointer-events-none"
+                              title="Move up"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveLineItem(idx, 'down')}
+                              disabled={idx === (doc.lineItems?.length || 1) - 1}
+                              className="p-1 rounded text-slate-400 hover:text-ink disabled:opacity-30 disabled:pointer-events-none"
+                              title="Move down"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
                           <input
                             type="text"
                             value={item.description}
                             onChange={(e) => handleUpdateLineItem(item.id, 'description', e.target.value)}
-                            placeholder="Description"
-                            className="flex-1 text-xs font-medium bg-white border border-paper-border rounded px-2 py-1"
+                            placeholder="Deliverable or item description"
+                            className="flex-1 text-xs font-semibold bg-white border border-paper-border rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:ring-1 focus:ring-forest"
                           />
+
                           <button
+                            type="button"
                             onClick={() => handleRemoveLineItem(item.id)}
-                            className="text-slate-400 hover:text-red-600 p-1"
+                            className="text-slate-400 hover:text-red-600 p-1 rounded"
                             title="Remove item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
+
+                        <div className="grid grid-cols-3 gap-2 text-xs items-end pt-1">
                           <div>
-                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Qty / Hours</span>
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Quantity</span>
                             <input
                               type="number"
                               min="1"
                               value={item.quantity}
                               onChange={(e) => handleUpdateLineItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="w-full text-xs bg-white border border-paper-border rounded px-2 py-1 mt-0.5"
+                              className="w-full text-xs bg-white border border-paper-border rounded-lg px-2 py-1 mt-0.5 focus:outline-hidden focus:ring-1 focus:ring-forest font-mono"
                             />
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Rate ($)</span>
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Rate ({doc.currency || '$'})</span>
                             <input
                               type="number"
                               min="0"
                               step="10"
                               value={item.rate}
                               onChange={(e) => handleUpdateLineItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                              className="w-full text-xs bg-white border border-paper-border rounded px-2 py-1 mt-0.5"
+                              className="w-full text-xs bg-white border border-paper-border rounded-lg px-2 py-1 mt-0.5 focus:outline-hidden focus:ring-1 focus:ring-forest font-mono"
                             />
+                          </div>
+                          <div className="text-right pb-1">
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase block">Line Total</span>
+                            <span className="font-mono font-bold text-ink text-xs">
+                              {doc.currency || '$'}{((Number(item.quantity) || 0) * (Number(item.rate) || 0)).toLocaleString()}
+                            </span>
                           </div>
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Calculations & Adjustments */}
+                  <div className="bg-paper-subtle p-3.5 rounded-xl border border-paper-border space-y-3 mt-3">
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 block mb-1">Discount Rate (%)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={doc.discountPercent || 0}
+                          onChange={(e) => {
+                            setDoc({ ...doc, discountPercent: parseFloat(e.target.value) || 0 });
+                            setSaveState('unsaved');
+                          }}
+                          className="w-full text-xs bg-white border border-paper-border rounded-lg px-2.5 py-1 font-mono"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 block mb-1">Tax / VAT Rate (%)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={doc.taxPercent || 0}
+                          onChange={(e) => {
+                            setDoc({ ...doc, taxPercent: parseFloat(e.target.value) || 0 });
+                            setSaveState('unsaved');
+                          }}
+                          className="w-full text-xs bg-white border border-paper-border rounded-lg px-2.5 py-1 font-mono"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-paper-border space-y-1 text-xs">
+                      <div className="flex justify-between text-slate-500">
+                        <span>Subtotal:</span>
+                        <span className="font-mono">{doc.currency || '$'}{(doc.subtotal || 0).toLocaleString()}</span>
+                      </div>
+                      {(doc.discountTotal || 0) > 0 && (
+                        <div className="flex justify-between text-emerald-700">
+                          <span>Discount ({doc.discountPercent}%):</span>
+                          <span className="font-mono">-{doc.currency || '$'}{doc.discountTotal?.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {(doc.taxTotal || 0) > 0 && (
+                        <div className="flex justify-between text-slate-500">
+                          <span>Tax / VAT ({doc.taxPercent}%):</span>
+                          <span className="font-mono">+{doc.currency || '$'}{doc.taxTotal?.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold text-ink text-sm pt-1 border-t border-slate-200">
+                        <span>Grand Total:</span>
+                        <span className="font-mono text-forest">{doc.currency || '$'}{(doc.total || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
 
                   {doc.category === 'finance' && (
@@ -668,6 +920,37 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                 <h4 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
                   Document Brand Palette
                 </h4>
+
+                {/* 1-Click Preset Palettes */}
+                <div>
+                  <label className="text-xs font-semibold text-ink block mb-2">Preset Brand Palettes</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { name: 'Curate Forest', primary: '#0F3D2E', accent: '#3A7D5F' },
+                      { name: 'Midnight Obsidian', primary: '#0F172A', accent: '#334155' },
+                      { name: 'Deep Marine', primary: '#0C4A6E', accent: '#0284C7' },
+                      { name: 'Warm Terracotta', primary: '#7C2D12', accent: '#C2410C' },
+                      { name: 'Burgundy Editorial', primary: '#4C0519', accent: '#9F1239' },
+                    ].map(p => (
+                      <button
+                        key={p.name}
+                        type="button"
+                        onClick={() => {
+                          setDoc(prev => ({
+                            ...prev,
+                            customBranding: { ...prev.customBranding, primaryColor: p.primary, accentColor: p.accent }
+                          }));
+                          setSaveState('unsaved');
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-paper-subtle hover:bg-slate-200/70 border border-paper-border transition-colors cursor-pointer"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.primary }} />
+                        <span>{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-xs font-semibold text-ink block mb-2">Primary Header Accent</label>
                   <div className="flex items-center gap-3">
@@ -708,6 +991,25 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                       <p className="text-[11px] text-slate-500">Used for bullets, sub-marks, and tags</p>
                     </div>
                   </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-ink block mb-2">Typography & Font Family</label>
+                  <Select
+                    value={doc.customBranding?.fontHeading || brandKit.fontHeading || 'Sora'}
+                    onChange={(e) => {
+                      setDoc({
+                        ...doc,
+                        customBranding: { ...doc.customBranding, fontHeading: e.target.value as any }
+                      });
+                      setSaveState('unsaved');
+                    }}
+                    options={[
+                      { value: 'Sora', label: 'Sora — Geometric Modern Display' },
+                      { value: 'Inter', label: 'Inter — Technical Neutral Standard' },
+                      { value: 'Serif', label: 'Playfair / Georgia — Classic Editorial' },
+                      { value: 'Mono', label: 'JetBrains / SF Mono — Monospaced Structure' },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -878,6 +1180,15 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               >
                 Fit
               </button>
+              <div className="h-3.5 w-px bg-paper-border mx-0.5" />
+              <button
+                type="button"
+                onClick={() => setIsFullscreenPreview(true)}
+                className="p-1 rounded hover:bg-white text-slate-600 hover:text-ink"
+                title="Fullscreen Preview"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
@@ -887,6 +1198,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               document={doc}
               brandKit={brandKit}
               zoom={zoom}
+              showSafetyGuides={showSafetyGuides}
             />
           </div>
         </div>
@@ -936,6 +1248,44 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
           </div>
         </div>
       </Dialog>
+
+      {/* Fullscreen Preview Modal */}
+      {isFullscreenPreview && (
+        <div className="fixed inset-0 z-50 bg-ink/80 backdrop-blur-md flex flex-col antialiased">
+          <div className="h-14 bg-white/10 px-6 flex items-center justify-between border-b border-white/10">
+            <div className="flex items-center gap-3 text-white">
+              <span className="font-display font-bold text-sm">{doc.title}</span>
+              <span className="text-xs text-white/60">• Fullscreen Preview</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleDownloadPDF}
+                leftIcon={<Download className="w-3.5 h-3.5" />}
+              >
+                Download PDF
+              </Button>
+              <button
+                type="button"
+                onClick={() => setIsFullscreenPreview(false)}
+                className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                title="Exit Fullscreen"
+              >
+                <Minimize2 className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto p-8 flex justify-center items-start">
+            <LivePDFCanvas
+              document={doc}
+              brandKit={brandKit}
+              zoom={1.0}
+              showSafetyGuides={showSafetyGuides}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

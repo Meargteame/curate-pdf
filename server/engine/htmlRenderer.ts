@@ -488,9 +488,13 @@ export function renderDocumentHtml(doc: DocumentData, brandKit: BrandKitConfig):
       <div>
         <div class="header-bar">
           <div class="company-logo">
-            ${showLogo ? `
-              <div class="monogram-badge">${escapeHtml(companyName.slice(0, 2).toUpperCase())}</div>
-            ` : ''}
+            ${showLogo ? (
+              (doc.customBranding?.logoUrl || brandKit.logoUrl) ? `
+                <img src="${doc.customBranding?.logoUrl || brandKit.logoUrl}" class="logo-image" style="max-height: 44px; max-width: 160px; object-fit: contain; border-radius: 4px;" alt="Logo" />
+              ` : `
+                <div class="monogram-badge">${escapeHtml(companyName.slice(0, 2).toUpperCase())}</div>
+              `
+            ) : ''}
             <div>
               <div class="company-name">${escapeHtml(companyName)}</div>
               <div class="company-tagline">${escapeHtml(brandKit.tagline || brandKit.website)}</div>

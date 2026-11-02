@@ -9,12 +9,16 @@ import {
   ArrowRight, 
   AlertCircle,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 import { getStoredTemplates, getStoredBrandKit } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
+import { Dialog } from '../../components/ui/Dialog';
+import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
+import { DocumentData } from '../../types';
 import confetti from 'canvas-confetti';
 
 export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
@@ -28,6 +32,7 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
   const [isCompleted, setIsCompleted] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   // Batch records state (supports sample or user-uploaded CSV)
   const defaultSampleRecords = [
@@ -216,28 +221,31 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
 
       {/* Stepper Header */}
       <div className="bg-white p-4 rounded-card border border-paper-border shadow-card flex items-center justify-between text-xs font-semibold">
-        <div className={`flex items-center gap-2 ${step >= 1 ? 'text-forest' : 'text-slate-400'}`}>
-          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 1 ? 'bg-forest text-white' : 'bg-slate-100'}`}>1</span>
-          <span>Choose Template</span>
-        </div>
-        <div className="h-px w-8 bg-paper-border hidden sm:block" />
-
-        <div className={`flex items-center gap-2 ${step >= 2 ? 'text-forest' : 'text-slate-400'}`}>
-          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 2 ? 'bg-forest text-white' : 'bg-slate-100'}`}>2</span>
-          <span>Import Records</span>
-        </div>
-        <div className="h-px w-8 bg-paper-border hidden sm:block" />
-
-        <div className={`flex items-center gap-2 ${step >= 3 ? 'text-forest' : 'text-slate-400'}`}>
-          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 3 ? 'bg-forest text-white' : 'bg-slate-100'}`}>3</span>
-          <span>Review & Map</span>
-        </div>
-        <div className="h-px w-8 bg-paper-border hidden sm:block" />
-
-        <div className={`flex items-center gap-2 ${step >= 4 ? 'text-forest' : 'text-slate-400'}`}>
-          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 4 ? 'bg-forest text-white' : 'bg-slate-100'}`}>4</span>
-          <span>Generate & Export</span>
-        </div>
+        {[
+          { num: 1, label: 'Choose Template' },
+          { num: 2, label: 'Import Records' },
+          { num: 3, label: 'Review & Map' },
+          { num: 4, label: 'Generate & Export' },
+        ].map((s, idx) => (
+          <React.Fragment key={s.num}>
+            {idx > 0 && <div className="h-px w-8 bg-paper-border hidden sm:block" />}
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => setStep(s.num as any)}
+              className={`flex items-center gap-2 transition-colors cursor-pointer disabled:cursor-not-allowed ${
+                step === s.num ? 'text-forest font-bold' : step > s.num ? 'text-slate-700 hover:text-forest' : 'text-slate-400'
+              }`}
+            >
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono ${
+                step === s.num ? 'bg-forest text-white shadow-xs' : step > s.num ? 'bg-forest-100 text-forest font-bold' : 'bg-slate-100 text-slate-400'
+              }`}>
+                {step > s.num ? '✓' : s.num}
+              </span>
+              <span>{s.label}</span>
+            </button>
+          </React.Fragment>
+        ))}
       </div>
 
       {/* Step Content */}
@@ -407,17 +415,27 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
               <Button variant="secondary" size="sm" onClick={() => setStep(2)}>
                 Back
               </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => {
-                  setStep(4);
-                  handleStartBatch();
-                }}
-                leftIcon={<Play className="w-4 h-4" />}
-              >
-                Execute Batch Generation
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => setIsPreviewModalOpen(true)}
+                  leftIcon={<Eye className="w-4 h-4 text-forest" />}
+                >
+                  Preview Row #1
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => {
+                    setStep(4);
+                    handleStartBatch();
+                  }}
+                  leftIcon={<Play className="w-4 h-4" />}
+                >
+                  Execute Batch Generation
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -476,6 +494,44 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
           </div>
         )}
       </div>
+
+      {/* Sample Row Preview Dialog */}
+      <Dialog
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        title="Batch Document Preview (Row #1)"
+        description="Verify how your CSV data populates the selected document template before running the batch."
+        maxWidth="2xl"
+      >
+        <div className="bg-paper-subtle p-4 rounded-xl border border-paper-border flex justify-center overflow-auto max-h-[500px]">
+          <LivePDFCanvas
+            document={{
+              id: 'batch-preview',
+              title: `${templates.find(t => t.id === selectedTemplateId)?.name || 'Invoice'} - Preview`,
+              referenceNumber: records[0]?.reference || 'INV-2026-901',
+              templateId: selectedTemplateId,
+              category: templates.find(t => t.id === selectedTemplateId)?.category || 'finance',
+              status: 'ready',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              date: records[0]?.date || '2026-10-30',
+              clientCompany: records[0]?.client || records[0]?.name || 'Acme Logistics Ltd',
+              clientName: 'Accounts Payable',
+              summary: records[0]?.summary || 'Bulk automated document item generation verification.',
+              lineItems: [
+                { id: '1', description: 'Batch Deliverable Services', quantity: 1, rate: parseFloat(String(records[0]?.amount || '4200').replace(/[^0-9.]/g, '')) || 4200 }
+              ],
+              subtotal: parseFloat(String(records[0]?.amount || '4200').replace(/[^0-9.]/g, '')) || 4200,
+              total: parseFloat(String(records[0]?.amount || '4200').replace(/[^0-9.]/g, '')) || 4200,
+              pageSize: 'A4',
+              orientation: 'portrait',
+              margin: 'standard',
+            }}
+            brandKit={brandKit}
+            zoom={0.65}
+          />
+        </div>
+      </Dialog>
     </div>
   );
 };

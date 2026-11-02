@@ -1,4 +1,4 @@
-import { DocumentData, TemplateDefinition, BrandKitConfig } from '../types';
+import { DocumentData, TemplateDefinition, BrandKitConfig, UserProfile } from '../types';
 
 export const DEFAULT_BRAND_KIT: BrandKitConfig = {
   companyName: 'Acme Advisory Group',
@@ -452,6 +452,34 @@ const STORAGE_KEYS = {
   TEMPLATES: 'curatepdf_templates_v1',
   BRAND_KIT: 'curatepdf_brandkit_v1',
   API_KEYS: 'curatepdf_apikeys_v1',
+  USER_PROFILE: 'curatepdf_user_profile_v1',
+};
+
+export const DEFAULT_USER_PROFILE: UserProfile = {
+  name: 'Sarah Jenkins',
+  email: 'sarah.jenkins@acme-advisory.example.com',
+  company: 'Acme Advisory Group',
+  role: 'Workspace Administrator',
+  plan: 'pro',
+  planStatus: 'Active (14-day Pro Trial)',
+  documentsQuota: 500,
+};
+
+export const getStoredUserProfile = (): UserProfile => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+    return raw ? JSON.parse(raw) : DEFAULT_USER_PROFILE;
+  } catch (e) {
+    return DEFAULT_USER_PROFILE;
+  }
+};
+
+export const saveStoredUserProfile = (profile: UserProfile): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+  } catch (e) {
+    console.error('Failed to save user profile to storage', e);
+  }
 };
 
 export const getStoredBrandKit = (): BrandKitConfig => {

@@ -107,11 +107,11 @@ export const Home: React.FC = () => {
             </div>
 
             {/* Document Preview Frame */}
-            <div className="w-full bg-paper-subtle/80 rounded-xl p-4 sm:p-6 border border-paper-border shadow-card flex justify-center overflow-hidden max-h-[560px]">
+            <div className="w-full bg-paper-subtle/80 rounded-2xl p-4 sm:p-6 border border-paper-border shadow-doc-lg flex justify-center items-start overflow-hidden min-h-[580px] sm:min-h-[660px]">
               <LivePDFCanvas
                 document={currentHeroDoc}
                 brandKit={brandKit}
-                zoom={0.68}
+                zoom={0.56}
               />
             </div>
           </div>
@@ -173,6 +173,75 @@ export const Home: React.FC = () => {
                 Download high-resolution PDFs instantly or trigger native print stylesheets for distribution.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Matrix: Manual Layouts vs CuratePDF */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-8">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
+          <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+            The Better Way
+          </span>
+          <h2 className="text-3xl font-display font-bold text-ink">
+            Stop wrestling with Word margins and broken table wraps
+          </h2>
+          <p className="text-sm text-slate-500">
+            Compare manual document drafting with CuratePDF’s structured automation engine.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Traditional Manual Approach */}
+          <div className="bg-white p-7 rounded-2xl border border-red-200/80 shadow-xs space-y-5">
+            <div className="flex items-center gap-2.5 text-red-600 font-bold text-sm">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span>Traditional Document Creation</span>
+            </div>
+            <ul className="space-y-3 text-xs text-slate-600">
+              <li className="flex items-start gap-2.5">
+                <span className="text-red-500 font-bold shrink-0">✕</span>
+                <span><strong>40+ minutes per document:</strong> Constant re-adjusting of table borders, spacing, and page splits.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-red-500 font-bold shrink-0">✕</span>
+                <span><strong>Broken math formulas:</strong> Manual recalculation of subtotals, tax brackets, and line item discounts.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-red-500 font-bold shrink-0">✕</span>
+                <span><strong>Brand inconsistency:</strong> Team members using wrong hex colors, mismatched fonts, and outdated logos.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-red-500 font-bold shrink-0">✕</span>
+                <span><strong>No programmatic path:</strong> Impossible to hook into backend databases or trigger via API endpoints.</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* CuratePDF Method */}
+          <div className="bg-forest-50/60 p-7 rounded-2xl border-2 border-forest/30 shadow-card space-y-5">
+            <div className="flex items-center gap-2.5 text-forest font-bold text-sm">
+              <span className="w-2 h-2 rounded-full bg-forest" />
+              <span>The CuratePDF Standard</span>
+            </div>
+            <ul className="space-y-3 text-xs text-slate-700">
+              <li className="flex items-start gap-2.5">
+                <span className="text-forest font-bold shrink-0">✓</span>
+                <span><strong>Under 60 seconds:</strong> Clean structured form input instantly generates publication-ready output.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-forest font-bold shrink-0">✓</span>
+                <span><strong>Real-time dynamic arithmetic:</strong> Live calculations for subtotals, tax rates, and currencies.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-forest font-bold shrink-0">✓</span>
+                <span><strong>Centralized Brand Tokens:</strong> Workspace palette and corporate typography apply automatically.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-forest font-bold shrink-0">✓</span>
+                <span><strong>Developer REST API & Bulk ZIP:</strong> Generate 1 or 1,000 PDFs programmatically via secure endpoints.</span>
+              </li>
+            </ul>
           </div>
         </div>
       </section>

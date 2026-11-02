@@ -1,15 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, Sparkles, HelpCircle } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, HelpCircle, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { getStoredUserProfile, saveStoredUserProfile } from '../../utils/storage';
 
 export const Pricing: React.FC = () => {
   const navigate = useNavigate();
+  const [isAnnual, setIsAnnual] = useState(true);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const plans = [
     {
+      id: 'free',
       name: 'Free Starter',
-      price: '$0',
+      priceMonthly: '$0',
+      priceAnnual: '$0',
       period: 'forever',
       description: 'Ideal for freelancers and individuals creating occasional professional documents.',
       features: [
@@ -24,8 +29,10 @@ export const Pricing: React.FC = () => {
       popular: false,
     },
     {
+      id: 'pro',
       name: 'Professional',
-      price: '$19',
+      priceMonthly: '$19',
+      priceAnnual: '$15',
       period: 'per month',
       description: 'Built for independent consultants, agencies, and small business operations.',
       features: [
@@ -41,8 +48,10 @@ export const Pricing: React.FC = () => {
       popular: true,
     },
     {
+      id: 'team',
       name: 'Team & API',
-      price: '$79',
+      priceMonthly: '$79',
+      priceAnnual: '$63',
       period: 'per month',
       description: 'For growing teams and engineering departments automating recurring workflows.',
       features: [
@@ -76,21 +85,57 @@ export const Pricing: React.FC = () => {
       q: 'Can I automate document generation through an API?',
       a: 'Yes. The Team & API tier includes secret API keys and code snippets in curl, Node.js, and Python to trigger automated rendering from your backend applications.',
     },
+    {
+      q: 'Can I cancel or change plans anytime?',
+      a: 'Yes. There are no lock-in contracts or termination fees. You can switch plans or cancel directly in your workspace settings at any time with one click.',
+    },
   ];
 
+  const handleSelectPlan = (planId: string) => {
+    const profile = getStoredUserProfile();
+    saveStoredUserProfile({
+      ...profile,
+      plan: planId as any,
+      planStatus: planId === 'free' ? 'Starter Free' : planId === 'pro' ? 'Active (14-day Pro Trial)' : 'Team & API Tier',
+    });
+    navigate('/app');
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-16 sm:py-20 space-y-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-16 sm:py-20 space-y-16 antialiased">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
           Simple, Transparent Pricing
         </span>
-        <h1 className="text-3xl sm:text-5xl font-display font-extrabold text-ink">
+        <h1 className="text-3xl sm:text-5xl font-display font-extrabold text-ink tracking-tight">
           Choose the right plan for your document workflow
         </h1>
         <p className="text-base text-slate-600 leading-relaxed">
           No hidden fees, no seat lock-ins, and no watermarks. Upgrade or downgrade whenever your operations change.
         </p>
+
+        {/* Monthly / Annual Billing Toggle */}
+        <div className="pt-4 flex items-center justify-center gap-3">
+          <span className={`text-xs font-semibold ${!isAnnual ? 'text-forest' : 'text-slate-400'}`}>Monthly billing</span>
+          <button
+            type="button"
+            onClick={() => setIsAnnual(!isAnnual)}
+            className="w-12 h-6 bg-slate-200 rounded-full p-0.5 transition-colors relative focus:outline-hidden"
+          >
+            <div
+              className={`w-5 h-5 rounded-full bg-forest shadow-md transition-transform duration-200 ${
+                isAnnual ? 'translate-x-6' : 'translate-x-0'
+              }`}
+            />
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-xs font-semibold ${isAnnual ? 'text-forest' : 'text-slate-400'}`}>Annual billing</span>
+            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+              Save 20%
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Pricing Cards */}
@@ -105,7 +150,7 @@ export const Pricing: React.FC = () => {
             }`}
           >
             {plan.popular && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-forest text-mint font-display font-bold text-xs uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-forest text-mint font-display font-bold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
                 Most Popular
               </div>
             )}
@@ -117,7 +162,9 @@ export const Pricing: React.FC = () => {
               </div>
 
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-display font-extrabold text-ink">{plan.price}</span>
+                <span className="text-4xl font-display font-extrabold text-ink">
+                  {isAnnual ? plan.priceAnnual : plan.priceMonthly}
+                </span>
                 <span className="text-xs text-slate-400 font-medium">/{plan.period}</span>
               </div>
 
@@ -141,7 +188,7 @@ export const Pricing: React.FC = () => {
                 variant={plan.variant}
                 size="md"
                 className="w-full justify-center"
-                onClick={() => navigate('/app')}
+                onClick={() => handleSelectPlan(plan.id)}
               >
                 {plan.cta}
               </Button>
@@ -150,25 +197,44 @@ export const Pricing: React.FC = () => {
         ))}
       </div>
 
-      {/* FAQs */}
-      <div className="max-w-4xl mx-auto space-y-8 pt-8">
+      {/* Interactive FAQ Accordion */}
+      <div className="max-w-3xl mx-auto space-y-6 pt-12">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-display font-bold text-ink">Frequently Asked Questions</h2>
           <p className="text-xs text-slate-500">Everything you need to know about our plans and technology</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {faqs.map((faq, i) => (
-            <div key={i} className="bg-white p-5 rounded-card border border-paper-border shadow-card space-y-2">
-              <h4 className="text-sm font-display font-bold text-ink flex items-start gap-2">
-                <HelpCircle className="w-4 h-4 text-forest shrink-0 mt-0.5" />
-                <span>{faq.q}</span>
-              </h4>
-              <p className="text-xs text-slate-600 pl-6 leading-relaxed">
-                {faq.a}
-              </p>
-            </div>
-          ))}
+        <div className="space-y-3">
+          {faqs.map((faq, i) => {
+            const isOpen = openFaqIndex === i;
+            return (
+              <div
+                key={i}
+                className="bg-white rounded-xl border border-paper-border shadow-2xs overflow-hidden transition-all"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaqIndex(isOpen ? null : i)}
+                  className="w-full p-4.5 text-left flex items-center justify-between gap-4 hover:bg-slate-50/50"
+                >
+                  <span className="text-sm font-display font-bold text-ink flex items-center gap-2.5">
+                    <HelpCircle className="w-4 h-4 text-forest shrink-0" />
+                    <span>{faq.q}</span>
+                  </span>
+                  {isOpen ? (
+                    <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                  )}
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-paper-subtle/30">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

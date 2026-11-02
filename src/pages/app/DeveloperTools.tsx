@@ -9,10 +9,14 @@ import {
   Code2, 
   Activity, 
   ExternalLink,
-  ShieldAlert
+  ShieldAlert,
+  Play,
+  Download,
+  Webhook,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+import { Input, Textarea } from '../../components/ui/Input';
 import { Dialog } from '../../components/ui/Dialog';
 import { ApiKeyItem } from '../../types';
 
@@ -26,6 +30,27 @@ export const DeveloperTools: React.FC<{ onShowToast?: (title: string, message?: 
   const [copiedKey, setCopiedKey] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
+
+  // Interactive API Sandbox state
+  const [sandboxEndpoint, setSandboxEndpoint] = useState<string>('/api/v1/documents');
+  const [sandboxPayload, setSandboxPayload] = useState<string>(JSON.stringify({
+    title: 'Automated Tax Invoice',
+    referenceNumber: 'INV-API-8801',
+    templateId: 'tpl-invoice-minimal',
+    category: 'finance',
+    clientCompany: 'Stripe Global Services',
+    total: 4250,
+    lineItems: [
+      { id: '1', description: 'API Infrastructure Capacity', quantity: 1, rate: 4250 }
+    ]
+  }, null, 2));
+  const [isTestingApi, setIsTestingApi] = useState(false);
+  const [sandboxResponse, setSandboxResponse] = useState<any>(null);
+  const [sandboxLatency, setSandboxLatency] = useState<number | null>(null);
+
+  // Webhook state
+  const [webhookUrl, setWebhookUrl] = useState('https://webhook.site/demo-curatepdf');
+  const [webhookEvent, setWebhookEvent] = useState('batch.completed');
 
   // Fetch from backend if online
   React.useEffect(() => {
@@ -83,6 +108,35 @@ export const DeveloperTools: React.FC<{ onShowToast?: (title: string, message?: 
     }
   };
 
+  const handleRunSandbox = async () => {
+    setIsTestingApi(true);
+    const startTime = performance.now();
+    try {
+      const body = JSON.parse(sandboxPayload);
+      const res = await fetch(sandboxEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      const endTime = performance.now();
+      setSandboxLatency(Math.round(endTime - startTime));
+      setSandboxResponse({ status: res.status, statusText: res.statusText, data });
+      if (onShowToast) {
+        onShowToast('API Response: 200 OK', `Executed in ${Math.round(endTime - startTime)}ms`, 'success');
+      }
+    } catch (err: any) {
+      const endTime = performance.now();
+      setSandboxLatency(Math.round(endTime - startTime));
+      setSandboxResponse({ status: 500, error: err.message });
+      if (onShowToast) {
+        onShowToast('API Error', err.message, 'error');
+      }
+    } finally {
+      setIsTestingApi(false);
+    }
+  };
+
   const codeSnippets = {
     curl: `curl -X POST https://api.curatepdf.site/v1/documents/generate \\
   -H "Authorization: Bearer cp_live_your_api_key_here" \\
@@ -135,7 +189,7 @@ with open("invoice.pdf", "wb") as f:
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-16">
+    <div className="space-y-8 max-w-5xl mx-auto pb-16 antialiased">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-ink">Developer API & Integrations</h1>
@@ -145,8 +199,8 @@ with open("invoice.pdf", "wb") as f:
       </div>
 
       {/* API Keys Card */}
-      <div className="bg-white p-5 rounded-card border border-paper-border shadow-card space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
               API Authentication Keys
@@ -196,11 +250,85 @@ with open("invoice.pdf", "wb") as f:
         </div>
       </div>
 
+      {/* Interactive API Sandbox */}
+      <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-paper-border">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-forest" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+              Live API Request Tester
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono text-slate-400">Endpoint:</span>
+            <span className="text-xs font-mono font-semibold text-ink bg-paper-subtle px-2 py-0.5 rounded border border-paper-border">
+              POST /api/v1/documents
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-ink block">JSON Request Body</label>
+            <textarea
+              rows={9}
+              value={sandboxPayload}
+              onChange={(e) => setSandboxPayload(e.target.value)}
+              className="w-full bg-slate-900 text-slate-100 font-mono text-xs rounded-xl p-3 border border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-forest"
+            />
+            <div className="flex justify-end pt-1">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleRunSandbox}
+                loading={isTestingApi}
+                leftIcon={<Play className="w-3.5 h-3.5" />}
+              >
+                Send API Request
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-ink block">Response Payload</label>
+              {sandboxLatency !== null && (
+                <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  {sandboxResponse?.status || 200} OK • {sandboxLatency}ms
+                </span>
+              )}
+            </div>
+            <div className="h-[218px] bg-slate-950 text-emerald-400 font-mono text-xs rounded-xl p-3 border border-slate-800 overflow-auto">
+              {sandboxResponse ? (
+                <pre>{JSON.stringify(sandboxResponse, null, 2)}</pre>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-600 italic">
+                  Click "Send API Request" to test live endpoint
+                </div>
+              )}
+            </div>
+            {sandboxResponse?.data?.id && (
+              <div className="flex justify-end pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/api/v1/documents/${sandboxResponse.data.id}/pdf`, '_blank')}
+                  leftIcon={<Download className="w-3.5 h-3.5 text-forest" />}
+                  className="text-xs"
+                >
+                  Download Response PDF
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Code Snippets Section */}
-      <div className="bg-white p-5 rounded-card border border-paper-border shadow-card space-y-4">
+      <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
-            Request Examples
+            Client SDK Snippets
           </h3>
           <div className="flex items-center bg-paper-subtle p-0.5 rounded-lg border border-paper-border text-xs font-semibold">
             {(['curl', 'node', 'python'] as const).map((lang) => (
@@ -233,48 +361,30 @@ with open("invoice.pdf", "wb") as f:
         </div>
       </div>
 
-      {/* Generation Logs Sample */}
-      <div className="bg-white p-5 rounded-card border border-paper-border shadow-card space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
-              API Generation Logs
-            </h3>
-            <p className="text-xs text-slate-500">Recent automated rendering transactions</p>
-          </div>
-          <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-            API Health: 100% Operational
-          </span>
+      {/* Webhooks Section */}
+      <div className="bg-white p-6 rounded-card border border-paper-border shadow-card space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b border-paper-border">
+          <Webhook className="w-4 h-4 text-forest" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-forest font-display">
+            Webhook Delivery Endpoints
+          </h3>
         </div>
-
-        <div className="rounded-lg border border-paper-border overflow-hidden">
-          <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-paper-subtle text-slate-500 border-b border-paper-border">
-              <tr>
-                <th className="py-2.5 px-3">Status</th>
-                <th className="py-2.5 px-3">Method & Path</th>
-                <th className="py-2.5 px-3">Duration</th>
-                <th className="py-2.5 px-3">Template</th>
-                <th className="py-2.5 px-3 text-right">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-paper-border text-slate-700">
-              <tr className="hover:bg-slate-50">
-                <td className="py-2.5 px-3 text-emerald-700 font-bold">200 OK</td>
-                <td className="py-2.5 px-3">POST /v1/documents/generate</td>
-                <td className="py-2.5 px-3">280ms</td>
-                <td className="py-2.5 px-3 text-slate-500">tpl-invoice-minimal</td>
-                <td className="py-2.5 px-3 text-right text-slate-400">10 mins ago</td>
-              </tr>
-              <tr className="hover:bg-slate-50">
-                <td className="py-2.5 px-3 text-emerald-700 font-bold">200 OK</td>
-                <td className="py-2.5 px-3">POST /v1/documents/generate</td>
-                <td className="py-2.5 px-3">410ms</td>
-                <td className="py-2.5 px-3 text-slate-500">tpl-proposal-modern</td>
-                <td className="py-2.5 px-3 text-right text-slate-400">1 hour ago</td>
-              </tr>
-            </tbody>
-          </table>
+        <p className="text-xs text-slate-500">Receive real-time HTTP POST notifications when bulk document batches complete.</p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <Input
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://your-domain.com/webhooks/curatepdf"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => onShowToast?.('Webhook Ping', 'Test payload sent: 200 Delivered', 'success')}
+          >
+            Send Test Ping
+          </Button>
         </div>
       </div>
 
