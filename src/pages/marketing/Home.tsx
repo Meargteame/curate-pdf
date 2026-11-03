@@ -13,8 +13,6 @@ import {
   Printer, 
   FileCheck, 
   Zap, 
-  Copy, 
-  Check, 
   Briefcase, 
   Receipt, 
   BarChart3, 
@@ -30,57 +28,6 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const brandKit = getStoredBrandKit();
   const templates = getStoredTemplates();
-
-  const [activeApiTab, setActiveApiTab] = useState<'curl' | 'node' | 'python'>('curl');
-  const [isCopied, setIsCopied] = useState(false);
-
-  const apiSnippets = {
-    curl: `curl -X POST https://api.curatepdf.site/v1/documents \\
-  -H "Authorization: Bearer cp_live_your_api_key_here" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "templateId": "tpl-invoice-clean",
-    "title": "Commercial Invoice",
-    "referenceNumber": "INV-2026-904",
-    "clientCompany": "Acme Global Corp",
-    "lineItems": [
-      { "description": "Cloud Architecture Retainer", "quantity": 1, "rate": 3500 }
-    ],
-    "pageSize": "A4"
-  }'`,
-
-    node: `import { CuratePDF } from '@curatepdf/sdk';
-
-const curate = new CuratePDF({ apiKey: process.env.CURATEPDF_API_KEY });
-
-const doc = await curate.documents.create({
-  templateId: 'tpl-proposal-modern',
-  title: 'Executive Architecture Proposal',
-  clientCompany: 'Northwind Global',
-  total: 32000,
-  currency: 'USD',
-  pageSize: 'A4',
-});
-
-// Download print-ready vector PDF buffer
-const pdfBuffer = await curate.documents.downloadPdf(doc.id);`,
-
-    python: `from curatepdf import CuratePDF
-
-client = CuratePDF(api_key="cp_live_your_api_key_here")
-
-pdf_stream = client.documents.create_and_download(
-    template_id="tpl-invoice-clean",
-    title="Commercial Statement",
-    reference_number="INV-2026-8801",
-    client_company="Stripe Global Services",
-    total=4250,
-    page_size="A4"
-)
-
-with open("statement.pdf", "wb") as f:
-    f.write(pdf_stream)`
-  };
 
   return (
     <div className="space-y-24 pb-20 relative overflow-hidden antialiased">
@@ -185,118 +132,6 @@ with open("statement.pdf", "wb") as f:
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Developer API & Headless Engine Showcase */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-8">
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-          <span className="text-xs font-bold uppercase tracking-wider text-forest font-display">
-            Developer & Headless Engine
-          </span>
-          <h2 className="text-3xl font-display font-bold text-ink">
-            Render publication-grade PDFs directly from your stack
-          </h2>
-          <p className="text-sm text-slate-500">
-            Trigger on-demand document generation or bulk archives via standard REST endpoints with sub-100ms vector execution.
-          </p>
-        </div>
-
-        <div className="bg-[#0B0F12] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-          {/* Left: Code Snippet */}
-          <div className="lg:col-span-7 p-6 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-                <div className="flex items-center gap-1.5">
-                  {(['curl', 'node', 'python'] as const).map((lang) => (
-                    <button
-                      key={lang}
-                      type="button"
-                      onClick={() => setActiveApiTab(lang)}
-                      className={`px-3 py-1 rounded text-xs font-mono font-medium transition-colors ${
-                        activeApiTab === lang
-                          ? 'bg-forest text-white'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                      }`}
-                    >
-                      {lang}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(apiSnippets[activeApiTab]);
-                    setIsCopied(true);
-                    setTimeout(() => setIsCopied(false), 2000);
-                  }}
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800/80 transition-colors"
-                >
-                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{isCopied ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-
-              <pre className="font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed">
-                <code>{apiSnippets[activeApiTab]}</code>
-              </pre>
-            </div>
-
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Endpoint Active
-              </span>
-              <span>200 OK • 76ms Latency</span>
-            </div>
-          </div>
-
-          {/* Right: Response Payload & Metrics */}
-          <div className="lg:col-span-5 p-6 bg-[#070A0C] flex flex-col justify-between space-y-4">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <span className="text-xs font-mono text-slate-400">Response Payload (JSON)</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                  HTTP 201 Created
-                </span>
-              </div>
-              <pre className="font-mono text-xs text-emerald-400 overflow-x-auto pt-3 leading-relaxed">
-                <code>{`{
-  "status": 201,
-  "data": {
-    "id": "doc-9482-a",
-    "renderEngine": "VectorEngine 2.0",
-    "renderTimeMs": 68,
-    "pageSize": "A4",
-    "dpi": 300,
-    "downloadUrl": "/api/v1/documents/doc-9482-a/pdf"
-  }
-}`}</code>
-              </pre>
-            </div>
-
-            <div className="pt-4 border-t border-slate-800 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Batch Throughput</span>
-                <span className="font-mono text-white font-semibold">1,000 PDFs / 42 sec</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Color Calibration</span>
-                <span className="font-mono text-white font-semibold">sRGB & CMYK Print Safe</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Delivery Channels</span>
-                <span className="font-mono text-white font-semibold">Direct Stream, ZIP, Webhooks</span>
-              </div>
-              <div className="pt-2">
-                <NavLink
-                  to="/app/developer"
-                  className="w-full text-center py-2.5 rounded-xl bg-forest hover:bg-forest-900 text-white text-xs font-semibold block transition-colors shadow-2xs"
-                >
-                  Explore Developer Sandbox & API Keys →
-                </NavLink>
-              </div>
-            </div>
           </div>
         </div>
       </section>
