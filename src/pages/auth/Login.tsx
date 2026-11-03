@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ArrowRight, Lock, Mail, ShieldCheck, Check } from 'lucide-react';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
 import { Logo } from '../../components/brand/Logo';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -9,8 +9,8 @@ import { getStoredUserProfile, saveStoredUserProfile } from '../../utils/storage
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const currentProfile = getStoredUserProfile();
-  const [email, setEmail] = useState(currentProfile.email || 'sarah.jenkins@acme-advisory.example.com');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,6 +84,7 @@ export const Login: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@company.com"
               leftIcon={<Mail className="w-4 h-4" />}
               required
             />
@@ -93,6 +94,7 @@ export const Login: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••••••"
               leftIcon={<Lock className="w-4 h-4" />}
               required
             />
@@ -124,11 +126,6 @@ export const Login: React.FC = () => {
               </Button>
             </div>
           </form>
-
-          <div className="pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-forest" />
-            <span>256-bit TLS Encrypted Session</span>
-          </div>
         </div>
       </div>
     </div>
