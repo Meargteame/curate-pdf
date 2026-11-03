@@ -6,8 +6,8 @@ export const DEFAULT_BRAND_KIT: BrandKitConfig = {
   logoUrl: '',
   primaryColor: '#0F3D2E', // Deep Forest
   accentColor: '#3A7D5F',  // Sage Green
-  fontHeading: 'Sora',
-  fontBody: 'Inter',
+  fontHeading: 'Plus Jakarta Sans',
+  fontBody: 'Plus Jakarta Sans',
   website: 'https://acme-advisory.example.com',
   email: 'contact@acme-advisory.example.com',
   phone: '+1 (555) 234-5678',

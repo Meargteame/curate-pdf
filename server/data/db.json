@@ -1,6 +1,94 @@
 {
   "documents": [
     {
+      "title": "Automated Commercial Invoice",
+      "referenceNumber": "INV-API-2026-01",
+      "templateId": "tpl-invoice-clean",
+      "category": "finance",
+      "clientCompany": "Stripe Global Services Inc",
+      "clientEmail": "billing@stripe.example",
+      "total": 4250,
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Headless PDF Generation Engine Access",
+          "quantity": 1,
+          "rate": 2500
+        },
+        {
+          "id": "2",
+          "description": "Enterprise Vector PDF SLA & Webhooks",
+          "quantity": 1,
+          "rate": 1750
+        }
+      ],
+      "id": "doc-mw0r6apw",
+      "createdAt": "2026-11-03T13:58:08.324Z",
+      "updatedAt": "2026-11-03T13:58:08.325Z"
+    },
+    {
+      "id": "doc-mw0r5cy8",
+      "title": "Digital Transformation Proposal",
+      "referenceNumber": "PROP-2026-042",
+      "templateId": "tpl-proposal-modern",
+      "category": "business",
+      "status": "ready",
+      "createdAt": "2026-11-03T13:57:24.560Z",
+      "updatedAt": "2026-11-03T13:57:26.067Z",
+      "date": "2026-11-03",
+      "dueDate": "2026-11-30",
+      "clientName": "Sarah Jenkins",
+      "clientCompany": "Northwind Global Enterprises",
+      "clientEmail": "s.jenkins@northwind.io",
+      "clientAddress": "450 Lexington Ave, New York, NY 10017",
+      "summary": "This proposal outlines our strategic engagement framework to modernize Northwind Global’s enterprise document workflows, streamline reporting systems, and ensure unified brand compliance across 14 business units.",
+      "sections": [
+        {
+          "id": "sec-1",
+          "title": "Executive Summary & Objectives",
+          "content": "Northwind currently faces high operational friction in producing recurring investor and client deliverables. Acme Advisory will deploy standardized document architectures, integrate centralized template engines, and cut document generation cycle times by 65% within 90 days."
+        },
+        {
+          "id": "sec-2",
+          "title": "Phase Deliverables & Scope",
+          "content": "Phase 1: Architecture review and brand token normalization.\nPhase 2: Template system design and multi-format preview engines.\nPhase 3: Rollout, security hardening, and staff enablement workshops."
+        }
+      ],
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Discovery & Workflow Audit",
+          "quantity": 1,
+          "rate": 8500
+        },
+        {
+          "id": "2",
+          "description": "Template System Design & Engine Setup",
+          "quantity": 1,
+          "rate": 16500
+        },
+        {
+          "id": "3",
+          "description": "Enterprise Integration & Training",
+          "quantity": 1,
+          "rate": 7000
+        }
+      ],
+      "subtotal": 32000,
+      "taxTotal": 0,
+      "total": 32000,
+      "currency": "USD",
+      "paymentTerms": "",
+      "recipientName": "",
+      "awardTitle": "",
+      "candidateRole": "",
+      "candidateSkills": [],
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margin": "standard",
+      "discountTotal": 0
+    },
+    {
       "id": "doc-mw0qti14",
       "title": "Digital Transformation Proposal",
       "referenceNumber": "PROP-2026-042",

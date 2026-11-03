@@ -33,14 +33,16 @@
   body {
     background-color: var(--color-paper);
     color: var(--color-ink);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Sora', 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     color: var(--color-ink);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.028em;
   }
 }
 

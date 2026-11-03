@@ -47,14 +47,14 @@ interface FontPairing {
   id: string;
   name: string;
   description: string;
-  heading: 'Sora' | 'Inter' | 'Serif';
-  body: 'Inter' | 'System';
+  heading: 'Plus Jakarta Sans' | 'Sora' | 'Inter' | 'Serif';
+  body: 'Plus Jakarta Sans' | 'Inter' | 'System';
 }
 
 const FONT_PAIRINGS: FontPairing[] = [
-  { id: 'modern', name: 'Modern Geometric', description: 'Sora headings with Inter body. High impact and contemporary.', heading: 'Sora', body: 'Inter' },
-  { id: 'tech', name: 'Technical Precision', description: 'Inter headings and body. Clean, functional, and highly legible.', heading: 'Inter', body: 'Inter' },
-  { id: 'editorial', name: 'Classic Editorial', description: 'Serif headings with Inter body. Refined advisory and legal tone.', heading: 'Serif', body: 'Inter' },
+  { id: 'modern', name: 'Plus Jakarta Modern', description: 'Plus Jakarta Sans headings and body. Ultra-crisp, premium geometric clarity.', heading: 'Plus Jakarta Sans', body: 'Plus Jakarta Sans' },
+  { id: 'tech', name: 'Technical Precision', description: 'Plus Jakarta Sans headings with Inter body. Clean, functional, and highly legible.', heading: 'Plus Jakarta Sans', body: 'Inter' },
+  { id: 'editorial', name: 'Classic Editorial', description: 'Serif headings with Plus Jakarta Sans body. Refined advisory and legal tone.', heading: 'Serif', body: 'Plus Jakarta Sans' },
 ];
 
 // Helper to calculate contrast ratio for accessibility pill
@@ -133,8 +133,8 @@ export const BrandKit: React.FC<BrandKitProps> = ({ onShowToast }) => {
       paymentDetails: 'Net 30. Wire: First Republic Bank, Routing #121000358',
       primaryColor: '#0F3D2E',
       accentColor: '#3A7D5F',
-      fontHeading: 'Sora',
-      fontBody: 'Inter',
+      fontHeading: 'Plus Jakarta Sans',
+      fontBody: 'Plus Jakarta Sans',
       website: 'www.acme-advisory.example.com',
       email: 's.jenkins@acme-advisory.example.com',
       phone: '+1 (555) 234-8901',
@@ -483,8 +483,9 @@ export const BrandKit: React.FC<BrandKitProps> = ({ onShowToast }) => {
                 value={brandKit.fontHeading}
                 onChange={(e) => setBrandKit(prev => ({ ...prev, fontHeading: e.target.value as any }))}
                 options={[
-                  { value: 'Sora', label: 'Sora (Geometric Modern)' },
+                  { value: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans (World-Class Modern)' },
                   { value: 'Inter', label: 'Inter (Technical Clean)' },
+                  { value: 'Sora', label: 'Sora (Geometric Tech)' },
                   { value: 'Serif', label: 'Editorial Serif' },
                 ]}
               />
@@ -493,6 +494,7 @@ export const BrandKit: React.FC<BrandKitProps> = ({ onShowToast }) => {
                 value={brandKit.fontBody}
                 onChange={(e) => setBrandKit(prev => ({ ...prev, fontBody: e.target.value as any }))}
                 options={[
+                  { value: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans (Premium Geometric)' },
                   { value: 'Inter', label: 'Inter (High Readability)' },
                   { value: 'System', label: 'System Sans-Serif' },
                 ]}
