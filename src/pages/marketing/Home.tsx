@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { 
   ArrowRight, 
-  Layers, 
-  Palette, 
-  FileCode, 
-  Terminal, 
+  Layers,
+  FileCode,
   Download, 
-  Eye, 
-  ShieldCheck, 
+  Eye,
   ChevronRight, 
   Printer, 
   FileCheck, 
@@ -274,76 +271,6 @@ export const Home: React.FC = () => {
             <div className="pt-2 text-xs font-semibold text-slate-700 flex items-center gap-1">
               <span>View agreement templates</span>
               <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Engineering Architecture & Technical Benchmarks */}
-      <section className="bg-forest-950 text-white py-20 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12 relative z-10">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-display">
-              Infrastructure Specifications
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-white tracking-tight">
-              Engineered for publication-grade vector fidelity
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Why leading consultancies, engineering teams, and financial institutions deploy CuratePDF.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-2xl bg-forest-900/60 border border-forest-800/80 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                  300 DPI VECTOR
-                </span>
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              </div>
-              <h3 className="text-lg font-display font-bold text-white">Sub-Millimeter PDF Engine</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Unlike blurry HTML screenshot wrappers, our engine embeds true text vectors, calibrated font metrics, and print-safe margins with zero page-break wrapping bugs.
-              </p>
-              <div className="pt-2 border-t border-forest-800/80 flex items-center justify-between text-xs text-slate-400 font-mono">
-                <span>Rasterization DPI:</span>
-                <span className="text-white font-semibold">Native 300 DPI</span>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-forest-900/60 border border-forest-800/80 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                  DESIGN TOKENS
-                </span>
-                <Palette className="w-5 h-5 text-emerald-400" />
-              </div>
-              <h3 className="text-lg font-display font-bold text-white">Centralized Brand Kit</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Update your primary colors, monogram badges, and corporate typography once. All templates and bulk CSV exports immediately inherit exact brand compliance.
-              </p>
-              <div className="pt-2 border-t border-forest-800/80 flex items-center justify-between text-xs text-slate-400 font-mono">
-                <span>Palette Sync:</span>
-                <span className="text-white font-semibold">Global Workspace</span>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-forest-900/60 border border-forest-800/80 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                  HIGH THROUGHPUT
-                </span>
-                <Terminal className="w-5 h-5 text-emerald-400" />
-              </div>
-              <h3 className="text-lg font-display font-bold text-white">Sub-100ms API Execution</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Trigger on-demand document generation or assemble ZIP archives of hundreds of client invoices in seconds with reliable server-side execution.
-              </p>
-              <div className="pt-2 border-t border-forest-800/80 flex items-center justify-between text-xs text-slate-400 font-mono">
-                <span>Average Render:</span>
-                <span className="text-white font-semibold">68ms / page</span>
-              </div>
             </div>
           </div>
         </div>
