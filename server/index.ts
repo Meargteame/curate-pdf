@@ -9,6 +9,8 @@ import { brandKitRouter } from './routes/brandKit';
 import { bulkRouter } from './routes/bulk';
 import { keysRouter } from './routes/keys';
 import { healthRouter } from './routes/health';
+import { userRouter } from './routes/user';
+import { dbRouter } from './routes/database';
 import { findSystemChromium } from './engine/chromeDetector';
 
 const app = express();
@@ -41,6 +43,8 @@ app.use('/api/v1/templates', templatesRouter);
 app.use('/api/v1/brand-kit', brandKitRouter);
 app.use('/api/v1/bulk', bulkRouter);
 app.use('/api/v1/keys', keysRouter);
+app.use('/api/v1/user', userRouter);
+app.use('/api/v1/db', dbRouter);
 
 // Root greeting for API
 app.get('/api', (req, res) => {

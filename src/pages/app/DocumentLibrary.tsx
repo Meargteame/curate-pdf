@@ -31,7 +31,8 @@ import {
   saveStoredDocuments, 
   deleteStoredDocument, 
   upsertDocument,
-  getStoredBrandKit
+  getStoredBrandKit,
+  DB_SYNC_EVENT
 } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
@@ -56,6 +57,19 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
         }
       })
       .catch(() => {});
+  }, []);
+
+  // Reactive DB sync listener
+  useEffect(() => {
+    const handleSync = () => {
+      setDocuments(getStoredDocuments());
+    };
+    window.addEventListener(DB_SYNC_EVENT, handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener(DB_SYNC_EVENT, handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
   }, []);
   
   // Filtering & Sorting State

@@ -2,6 +2,7 @@ import { createRequire } from 'module';
 import { Writable } from 'stream';
 import { DocumentData, BrandKitConfig, TemplateDefinition } from '../../src/types';
 import { curateAndGeneratePdf } from './curator';
+import { Store } from '../db/store';
 
 const require = createRequire(import.meta.url);
 const archiverModule = require('archiver');
@@ -97,6 +98,10 @@ export async function executeBatchJob(
         }
 
         const result = await curateAndGeneratePdf(docData, brandKit);
+        
+        // Persist newly generated document directly into database!
+        Store.upsertDocument(docData);
+
         generatedFiles.push({
           name: `${refNumber}.pdf`,
           buffer: result.pdfBuffer,

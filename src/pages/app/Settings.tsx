@@ -25,7 +25,8 @@ import {
   saveStoredBrandKit,
   getStoredUserProfile,
   saveStoredUserProfile,
-  saveStoredDocuments
+  saveStoredDocuments,
+  syncFromBackendDb
 } from '../../utils/storage';
 
 export const Settings: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
@@ -59,6 +60,18 @@ export const Settings: React.FC<{ onShowToast?: (title: string, message?: string
   // Danger zone reset modal
   const [isResetOpen, setIsResetOpen] = useState(false);
 
+  // Load live user profile & team from database
+  React.useEffect(() => {
+    fetch('/api/v1/user')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data?.teamMembers && Array.isArray(json.data.teamMembers)) {
+          setTeamMembers(json.data.teamMembers);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleSave = () => {
     setIsSaving(true);
 
@@ -89,16 +102,30 @@ export const Settings: React.FC<{ onShowToast?: (title: string, message?: string
     e.preventDefault();
     if (!inviteEmail.trim()) return;
 
-    setTeamMembers(prev => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        name: inviteEmail.split('@')[0],
-        email: inviteEmail.trim(),
-        role: inviteRole,
-        status: 'Invited',
-      }
-    ]);
+    const newMember = {
+      name: inviteEmail.split('@')[0],
+      email: inviteEmail.trim(),
+      role: inviteRole,
+      status: 'Invited',
+    };
+
+    fetch('/api/v1/user/team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newMember),
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.data) {
+          setTeamMembers(prev => [...prev, res.data]);
+        } else {
+          setTeamMembers(prev => [...prev, { ...newMember, id: Date.now().toString() }]);
+        }
+      })
+      .catch(() => {
+        setTeamMembers(prev => [...prev, { ...newMember, id: Date.now().toString() }]);
+      });
+
     setIsInviteOpen(false);
     setInviteEmail('');
     if (onShowToast) {
@@ -126,11 +153,16 @@ export const Settings: React.FC<{ onShowToast?: (title: string, message?: string
     }
   };
 
-  const handleResetData = () => {
-    saveStoredDocuments([]);
+  const handleResetData = async () => {
+    try {
+      await fetch('/api/v1/db/reset', { method: 'POST' });
+      await syncFromBackendDb();
+    } catch {
+      saveStoredDocuments([]);
+    }
     setIsResetOpen(false);
     if (onShowToast) {
-      onShowToast('Workspace Reset', 'Cleared local documents cache.', 'info');
+      onShowToast('Workspace Reset', 'Database reset and synced to fresh schema.', 'info');
     }
   };
 

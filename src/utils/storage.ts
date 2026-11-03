@@ -465,6 +465,23 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   documentsQuota: 500,
 };
 
+export const DB_SYNC_EVENT = 'curate_db_sync';
+
+export interface DbSyncDetail {
+  entity: 'documents' | 'brandKit' | 'templates' | 'userProfile' | 'apiKeys' | 'all';
+  action: 'create' | 'update' | 'delete' | 'sync' | 'reset';
+  data?: any;
+}
+
+export const notifyDbSync = (detail: DbSyncDetail) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(DB_SYNC_EVENT, { detail }));
+    try {
+      localStorage.setItem('curate_last_sync_timestamp', `${Date.now()}_${detail.entity}_${detail.action}`);
+    } catch {}
+  }
+};
+
 export const getStoredUserProfile = (): UserProfile => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
@@ -480,6 +497,15 @@ export const saveStoredUserProfile = (profile: UserProfile): void => {
   } catch (e) {
     console.error('Failed to save user profile to storage', e);
   }
+  // Sync to Backend Database API
+  try {
+    fetch('/api/v1/user', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    }).catch(() => {});
+  } catch {}
+  notifyDbSync({ entity: 'userProfile', action: 'update', data: profile });
 };
 
 export const getStoredBrandKit = (): BrandKitConfig => {
@@ -505,6 +531,7 @@ export const saveStoredBrandKit = (brandKit: BrandKitConfig): void => {
       body: JSON.stringify(brandKit),
     }).catch(() => {});
   } catch {}
+  notifyDbSync({ entity: 'brandKit', action: 'update', data: brandKit });
 };
 
 export const getStoredDocuments = (): DocumentData[] => {
@@ -522,6 +549,7 @@ export const saveStoredDocuments = (docs: DocumentData[]): void => {
   } catch (e) {
     console.error('Failed to save documents to storage', e);
   }
+  notifyDbSync({ entity: 'documents', action: 'sync', data: docs });
 };
 
 export const getStoredDocumentById = (id: string): DocumentData | undefined => {
@@ -552,6 +580,7 @@ export const upsertDocument = (doc: DocumentData): DocumentData[] => {
     }).catch(() => {});
   }
   saveStoredDocuments(updated);
+  notifyDbSync({ entity: 'documents', action: index >= 0 ? 'update' : 'create', data: doc });
   return updated;
 };
 
@@ -563,9 +592,73 @@ export const deleteStoredDocument = (id: string): DocumentData[] => {
   fetch(`/api/v1/documents/${id}`, {
     method: 'DELETE',
   }).catch(() => {});
+  notifyDbSync({ entity: 'documents', action: 'delete', data: id });
   return updated;
 };
 
 export const getStoredTemplates = (): TemplateDefinition[] => {
-  return INITIAL_TEMPLATES;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.TEMPLATES);
+    return raw ? JSON.parse(raw) : INITIAL_TEMPLATES;
+  } catch (e) {
+    return INITIAL_TEMPLATES;
+  }
+};
+
+export const saveStoredTemplates = (templates: TemplateDefinition[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(templates));
+  } catch (e) {
+    console.error('Failed to save templates to storage', e);
+  }
+  notifyDbSync({ entity: 'templates', action: 'update', data: templates });
+};
+
+export const syncFromBackendDb = async (): Promise<{
+  documents: DocumentData[];
+  brandKit: BrandKitConfig;
+  templates: TemplateDefinition[];
+  userProfile: UserProfile;
+}> => {
+  try {
+    const [docsRes, kitRes, tplRes, userRes] = await Promise.all([
+      fetch('/api/v1/documents').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/v1/brand-kit').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/v1/templates').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/v1/user').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+
+    let docs = getStoredDocuments();
+    let brandKit = getStoredBrandKit();
+    let templates = getStoredTemplates();
+    let userProfile = getStoredUserProfile();
+
+    if (docsRes?.data && Array.isArray(docsRes.data)) {
+      docs = docsRes.data;
+      localStorage.setItem(STORAGE_KEYS.DOCUMENTS, JSON.stringify(docs));
+    }
+    if (kitRes?.data) {
+      brandKit = kitRes.data;
+      localStorage.setItem(STORAGE_KEYS.BRAND_KIT, JSON.stringify(brandKit));
+    }
+    if (tplRes?.data && Array.isArray(tplRes.data)) {
+      templates = tplRes.data;
+      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(templates));
+    }
+    if (userRes?.data?.profile) {
+      userProfile = userRes.data.profile;
+      localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(userProfile));
+    }
+
+    notifyDbSync({ entity: 'all', action: 'sync' });
+    return { documents: docs, brandKit, templates, userProfile };
+  } catch (err) {
+    console.warn('Backend database sync fallback to local storage:', err);
+    return {
+      documents: getStoredDocuments(),
+      brandKit: getStoredBrandKit(),
+      templates: getStoredTemplates(),
+      userProfile: getStoredUserProfile(),
+    };
+  }
 };

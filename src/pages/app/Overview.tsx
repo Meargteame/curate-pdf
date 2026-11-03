@@ -20,7 +20,8 @@ import {
   getStoredTemplates, 
   getStoredBrandKit,
   getStoredUserProfile,
-  upsertDocument
+  upsertDocument,
+  DB_SYNC_EVENT
 } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Badge';
@@ -31,11 +32,11 @@ import { DocumentData } from '../../types';
 export const Overview: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
-  const templates = getStoredTemplates();
-  const brandKit = getStoredBrandKit();
-  const userProfile = getStoredUserProfile();
+  const [templates, setTemplates] = useState(() => getStoredTemplates());
+  const [brandKit, setBrandKit] = useState(() => getStoredBrandKit());
+  const [userProfile, setUserProfile] = useState(() => getStoredUserProfile());
 
-  // Dynamic live fetch from server database
+  // Dynamic live fetch from server database on mount
   React.useEffect(() => {
     fetch('/api/v1/documents')
       .then(res => res.json())
@@ -46,6 +47,23 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
         }
       })
       .catch(() => {});
+  }, []);
+
+  // Live Reactive DB Sync listener
+  React.useEffect(() => {
+    const handleSync = () => {
+      setDocuments(getStoredDocuments());
+      setBrandKit(getStoredBrandKit());
+      setTemplates(getStoredTemplates());
+      setUserProfile(getStoredUserProfile());
+    };
+
+    window.addEventListener(DB_SYNC_EVENT, handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener(DB_SYNC_EVENT, handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
   }, []);
 
   const recentDocs = documents.slice(0, 5);

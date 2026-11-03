@@ -1,6 +1,68 @@
 {
   "documents": [
     {
+      "id": "doc-mw0qti14",
+      "title": "Digital Transformation Proposal",
+      "referenceNumber": "PROP-2026-042",
+      "templateId": "tpl-proposal-modern",
+      "category": "business",
+      "status": "ready",
+      "createdAt": "2026-11-03T13:48:11.272Z",
+      "updatedAt": "2026-11-03T13:48:13.566Z",
+      "date": "2026-11-03",
+      "dueDate": "2026-11-30",
+      "clientName": "Sarah Jenkins",
+      "clientCompany": "Northwind Global Enterprises",
+      "clientEmail": "s.jenkins@northwind.io",
+      "clientAddress": "450 Lexington Ave, New York, NY 10017",
+      "summary": "This proposal outlines our strategic engagement framework to modernize Northwind Global’s enterprise document workflows, streamline reporting systems, and ensure unified brand compliance across 14 business units.",
+      "sections": [
+        {
+          "id": "sec-1",
+          "title": "Executive Summary & Objectives",
+          "content": "Northwind currently faces high operational friction in producing recurring investor and client deliverables. Acme Advisory will deploy standardized document architectures, integrate centralized template engines, and cut document generation cycle times by 65% within 90 days."
+        },
+        {
+          "id": "sec-2",
+          "title": "Phase Deliverables & Scope",
+          "content": "Phase 1: Architecture review and brand token normalization.\nPhase 2: Template system design and multi-format preview engines.\nPhase 3: Rollout, security hardening, and staff enablement workshops."
+        }
+      ],
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Discovery & Workflow Audit",
+          "quantity": 1,
+          "rate": 8500
+        },
+        {
+          "id": "2",
+          "description": "Template System Design & Engine Setup",
+          "quantity": 1,
+          "rate": 16500
+        },
+        {
+          "id": "3",
+          "description": "Enterprise Integration & Training",
+          "quantity": 1,
+          "rate": 7000
+        }
+      ],
+      "subtotal": 32000,
+      "taxTotal": 0,
+      "total": 32000,
+      "currency": "USD",
+      "paymentTerms": "",
+      "recipientName": "",
+      "awardTitle": "",
+      "candidateRole": "",
+      "candidateSkills": [],
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margin": "standard",
+      "discountTotal": 0
+    },
+    {
       "id": "doc-mw0jpbd5",
       "title": "Digital Transformation Proposal",
       "referenceNumber": "PROP-2026-042",
@@ -8,7 +70,7 @@
       "category": "business",
       "status": "ready",
       "createdAt": "2026-11-03T10:28:58.697Z",
-      "updatedAt": "2026-11-03T10:29:00.835Z",
+      "updatedAt": "2026-11-03T13:15:49.866Z",
       "date": "2026-11-03",
       "dueDate": "2026-11-30",
       "clientName": "Sarah Jenkins",
@@ -1024,6 +1086,31 @@
       "keyPrefix": "cp_test_3c44e1d...",
       "createdDate": "2026-10-22",
       "lastUsed": "Yesterday"
+    }
+  ],
+  "userProfile": {
+    "name": "Sarah Jenkins",
+    "email": "sarah.jenkins@acme-advisory.example.com",
+    "company": "Acme Advisory Group",
+    "role": "Workspace Administrator",
+    "plan": "pro",
+    "planStatus": "Active (14-day Pro Trial)",
+    "documentsQuota": 500
+  },
+  "teamMembers": [
+    {
+      "id": "1",
+      "name": "Sarah Jenkins",
+      "email": "sarah.jenkins@acme-advisory.example.com",
+      "role": "Owner",
+      "status": "Active"
+    },
+    {
+      "id": "2",
+      "name": "Alex Rivera",
+      "email": "a.rivera@example.com",
+      "role": "Editor",
+      "status": "Active"
     }
   ]
 }

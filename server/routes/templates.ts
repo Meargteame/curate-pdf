@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Store } from '../db/store';
+import { TemplateDefinition } from '../../src/types';
 
 export const templatesRouter = Router();
 
@@ -23,4 +24,36 @@ templatesRouter.get('/:id', (req: Request, res: Response): void => {
     return;
   }
   res.json({ data: template });
+});
+
+// POST /api/v1/templates
+templatesRouter.post('/', (req: Request, res: Response): void => {
+  const tpl: TemplateDefinition = {
+    ...req.body,
+    id: req.body.id || `tpl-custom-${Date.now().toString(36)}`,
+  };
+  Store.upsertTemplate(tpl);
+  res.status(201).json({ data: tpl });
+});
+
+// PUT /api/v1/templates/:id
+templatesRouter.put('/:id', (req: Request, res: Response): void => {
+  const existing = Store.getTemplateById(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: 'Template not found' });
+    return;
+  }
+  const updated: TemplateDefinition = {
+    ...existing,
+    ...req.body,
+    id: existing.id,
+  };
+  Store.upsertTemplate(updated);
+  res.json({ data: updated });
+});
+
+// DELETE /api/v1/templates/:id
+templatesRouter.delete('/:id', (req: Request, res: Response): void => {
+  Store.deleteTemplate(req.params.id);
+  res.json({ message: 'Template removed', id: req.params.id });
 });

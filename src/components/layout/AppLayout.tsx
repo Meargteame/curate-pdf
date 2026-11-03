@@ -34,7 +34,9 @@ import {
   getStoredBrandKit, 
   getStoredUserProfile, 
   getStoredDocuments, 
-  getStoredTemplates 
+  getStoredTemplates,
+  DB_SYNC_EVENT,
+  syncFromBackendDb
 } from '../../utils/storage';
 
 export interface AppLayoutProps {
@@ -85,19 +87,35 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const documents = getStoredDocuments();
-  const templates = getStoredTemplates();
+  const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
+  const [templates, setTemplates] = useState<TemplateDefinition[]>(() => getStoredTemplates());
 
-  // Keep brand kit and profile synced with workspace updates
+  // Initial 2-way sync with backend database
   useEffect(() => {
-    setUserProfile(getStoredUserProfile());
-    fetch('/api/v1/brand-kit')
-      .then(res => res.json())
-      .then(json => {
-        if (json.data) setBrandKit(json.data);
-      })
-      .catch(() => {});
-  }, [location.pathname]);
+    syncFromBackendDb().then(data => {
+      setDocuments(data.documents);
+      setBrandKit(data.brandKit);
+      setTemplates(data.templates);
+      setUserProfile(data.userProfile);
+    });
+  }, []);
+
+  // Reactive DB sync listener across all components & tabs
+  useEffect(() => {
+    const handleDbSync = () => {
+      setDocuments(getStoredDocuments());
+      setBrandKit(getStoredBrandKit());
+      setTemplates(getStoredTemplates());
+      setUserProfile(getStoredUserProfile());
+    };
+
+    window.addEventListener(DB_SYNC_EVENT, handleDbSync);
+    window.addEventListener('storage', handleDbSync);
+    return () => {
+      window.removeEventListener(DB_SYNC_EVENT, handleDbSync);
+      window.removeEventListener('storage', handleDbSync);
+    };
+  }, []);
 
   // Global Ctrl+K / Cmd+K keyboard shortcut
   useEffect(() => {

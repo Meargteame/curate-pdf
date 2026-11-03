@@ -16,7 +16,7 @@ import {
   ChevronRight,
   FileText
 } from 'lucide-react';
-import { getStoredTemplates, getStoredBrandKit } from '../../utils/storage';
+import { getStoredTemplates, getStoredBrandKit, syncFromBackendDb } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
@@ -236,6 +236,8 @@ export const BulkGeneration: React.FC<{ onShowToast?: (title: string, message?: 
                 setProgress(100);
                 setIsProcessing(false);
                 setIsCompleted(true);
+                // Synchronize all generated batch documents directly to database
+                syncFromBackendDb().catch(() => {});
                 try {
                   confetti({
                     particleCount: 50,
