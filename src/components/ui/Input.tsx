@@ -16,7 +16,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full text-left">
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+          <label htmlFor={inputId} className="block text-xs font-semibold text-slate-700 tracking-wide mb-2">
             {label}
           </label>
         )}
@@ -30,8 +30,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              "w-full h-11 px-3.5 rounded-xl border border-paper-border bg-white text-ink text-sm placeholder:text-slate-400 transition-colors shadow-2xs",
-              "focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest",
+              "w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-ink text-sm placeholder:text-slate-400 transition-all shadow-2xs",
+              "focus:outline-none focus:ring-3 focus:ring-forest/15 focus:border-forest",
               "disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed",
               leftIcon && "pl-11",
               rightIcon && "pr-11",

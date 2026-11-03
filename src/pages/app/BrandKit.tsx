@@ -7,7 +7,6 @@ import {
   Check, 
   FileCheck,
   RotateCcw,
-  Sparkles as _NoSparkles,
   FileText,
   Receipt,
   BarChart3,

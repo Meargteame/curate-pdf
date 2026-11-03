@@ -52,14 +52,14 @@ export const Login: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-paper-border shadow-doc-lg space-y-6">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[440px]">
+        <div className="bg-white p-7 sm:p-9 rounded-2xl border border-slate-200/90 shadow-xl space-y-6">
           {/* Quick Google SSO */}
           <div>
             <button
               type="button"
               onClick={() => handleOAuth('google')}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-paper-border rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 h-12 px-4 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-xs cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -71,14 +71,14 @@ export const Login: React.FC = () => {
             </button>
           </div>
 
-          <div className="relative flex items-center justify-center my-1">
-            <div className="border-t border-paper-border w-full" />
+          <div className="relative flex items-center justify-center my-6">
+            <div className="border-t border-slate-200 w-full" />
             <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">
               Or sign in with email
             </span>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Work Email Address"
               type="email"
@@ -97,9 +97,9 @@ export const Login: React.FC = () => {
               required
             />
 
-            <div className="flex items-center justify-between text-xs pt-0.5">
+            <div className="flex items-center justify-between text-xs pt-1">
               <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
-                <input type="checkbox" defaultChecked className="rounded border-paper-border text-forest focus:ring-forest w-3.5 h-3.5 cursor-pointer" />
+                <input type="checkbox" defaultChecked className="rounded border-slate-300 text-forest focus:ring-forest w-3.5 h-3.5 cursor-pointer" />
                 <span>Remember this device</span>
               </label>
               <button 
@@ -111,19 +111,21 @@ export const Login: React.FC = () => {
               </button>
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              loading={isLoading}
-              className="w-full justify-center h-12 text-sm sm:text-base font-bold rounded-xl shadow-md hover:shadow-lg mt-1"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Sign In to Workspace
-            </Button>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={isLoading}
+                className="w-full justify-center h-12 text-sm sm:text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
+                Sign In to Workspace
+              </Button>
+            </div>
           </form>
 
-          <div className="pt-4 border-t border-paper-border flex items-center justify-center gap-2 text-xs text-slate-500">
+          <div className="pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-forest" />
             <span>256-bit TLS Encrypted Session</span>
           </div>

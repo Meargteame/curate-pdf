@@ -64,9 +64,9 @@ export const Register: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-paper-border shadow-doc-lg space-y-6">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[460px]">
+        <div className="bg-white p-7 sm:p-9 rounded-2xl border border-slate-200/90 shadow-xl space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Your Full Name"
               value={name}
@@ -105,21 +105,23 @@ export const Register: React.FC = () => {
               required
             />
 
-            <div className="text-xs text-slate-600 bg-forest-50/60 p-3.5 rounded-xl border border-forest-100/80 flex items-center gap-2.5">
+            <div className="text-xs text-slate-600 bg-forest-50/60 p-4 rounded-xl border border-forest-100/80 flex items-center gap-3">
               <ShieldCheck className="w-4 h-4 text-forest shrink-0" />
               <span>Includes 14-day full access trial of Professional features. No credit card required.</span>
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              loading={isLoading}
-              className="w-full justify-center h-12 text-sm sm:text-base font-bold rounded-xl shadow-md hover:shadow-lg mt-1"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Launch Organization Workspace
-            </Button>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={isLoading}
+                className="w-full justify-center h-12 text-sm sm:text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
+                Launch Organization Workspace
+              </Button>
+            </div>
           </form>
 
           <div className="pt-2 text-center text-[11px] text-slate-400">
