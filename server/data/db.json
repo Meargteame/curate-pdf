@@ -1,6 +1,32 @@
 {
   "documents": [
     {
+      "title": "Automated Commercial Invoice",
+      "referenceNumber": "INV-API-2026-01",
+      "templateId": "tpl-invoice-clean",
+      "category": "finance",
+      "clientCompany": "Stripe Global Services Inc",
+      "clientEmail": "billing@stripe.example",
+      "total": 4250,
+      "lineItems": [
+        {
+          "id": "1",
+          "description": "Headless PDF Generation Engine Access",
+          "quantity": 1,
+          "rate": 2500
+        },
+        {
+          "id": "2",
+          "description": "Enterprise Vector PDF SLA & Webhooks",
+          "quantity": 1,
+          "rate": 1750
+        }
+      ],
+      "id": "doc-mw0htiwp",
+      "createdAt": "2026-11-03T09:36:15.865Z",
+      "updatedAt": "2026-11-03T09:36:15.865Z"
+    },
+    {
       "id": "doc-mvzaq0my",
       "title": "Digital Transformation Proposal",
       "referenceNumber": "PROP-2026-042",
