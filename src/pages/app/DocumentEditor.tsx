@@ -23,7 +23,9 @@ import {
   Sun,
   Moon,
   Copy,
-  Loader2
+  Loader2,
+  MoreHorizontal,
+  FileCode
 } from 'lucide-react';
 import { DocumentData, LineItem, DocumentSection } from '../../types';
 import { 
@@ -115,6 +117,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [showSafetyGuides, setShowSafetyGuides] = useState<boolean>(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState<boolean>(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState<boolean>(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
   const [deskTheme, setDeskTheme] = useState<'dark' | 'light'>('dark');
   const [lastSavedTime, setLastSavedTime] = useState<string>('just now');
   const isFirstRender = React.useRef(true);
@@ -488,13 +491,13 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             variant="ghost" 
             size="sm" 
             onClick={() => navigate('/app/documents')}
-            className="text-slate-500 hover:text-ink -ml-1 sm:-ml-2 h-8 px-2 sm:px-3"
+            className="text-slate-500 hover:text-ink -ml-1 sm:-ml-2 h-8 px-2 sm:px-2.5 rounded-lg"
           >
-            <ArrowLeft className="w-4 h-4 mr-0.5 sm:mr-1" />
-            <span className="hidden sm:inline">Back</span>
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline text-xs font-semibold">Documents</span>
           </Button>
 
-          <div className="h-5 w-px bg-paper-border hidden sm:block" />
+          <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 
           <div>
             <div className="flex items-center gap-2">
@@ -505,82 +508,79 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                   setDoc({ ...doc, title: e.target.value });
                   setSaveState('unsaved');
                 }}
-                className="font-display font-bold text-xs sm:text-base text-ink bg-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-forest px-1.5 py-0.5 rounded border border-transparent hover:border-paper-border transition-colors w-24 xs:w-36 sm:w-80 truncate"
+                className="font-display font-bold text-sm sm:text-base text-ink bg-transparent hover:bg-slate-50 focus:bg-white focus:ring-2 focus:ring-forest/20 focus:border-forest px-2 py-0.5 rounded-lg border border-transparent hover:border-slate-200 transition-colors w-32 xs:w-44 sm:w-72 truncate"
                 placeholder="Document Title"
               />
               <Badge status={doc.status} size="sm" className="hidden md:inline-flex" />
               
               {/* Auto-Save Status Pill */}
               {saveState === 'saved' && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
                   <CheckCircle className="w-3 h-3 text-emerald-600" />
                   <span>Saved {lastSavedTime}</span>
                 </span>
               )}
               {saveState === 'unsaved' && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-amber-700 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-amber-700 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   <span>Unsaved changes</span>
                 </span>
               )}
               {saveState === 'saving' && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-forest font-semibold bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-forest font-semibold bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80">
                   <Loader2 className="w-3 h-3 animate-spin text-forest" />
                   <span>Saving...</span>
                 </span>
               )}
             </div>
             
-            <div className="flex items-center gap-2 pl-1.5">
-              <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
-                {doc.referenceNumber} • {doc.category}
-              </span>
+            {/* Crisp Breadcrumb Subtitle */}
+            <div className="flex items-center gap-1.5 pl-2 text-[11px] text-slate-500">
+              <span className="font-mono text-slate-400">{doc.referenceNumber}</span>
+              <span className="text-slate-300">•</span>
+              <span className="capitalize font-medium text-slate-600">{doc.category}</span>
+              <span className="text-slate-300">•</span>
               <button
+                type="button"
                 onClick={() => setIsTemplatePickerOpen(true)}
-                className="text-[11px] font-semibold text-forest hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1 font-semibold text-forest hover:text-forest-900 transition-colors cursor-pointer hover:underline"
               >
-                Change Layout
+                <Layers className="w-3 h-3" />
+                <span>Change Layout</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Action Controls & Currency */}
+        {/* Action Controls */}
         <div className="flex items-center gap-2">
-          {/* Currency Switcher */}
-          <select
-            value={doc.currency || 'USD'}
-            onChange={(e) => {
-              setDoc({ ...doc, currency: e.target.value });
-              setSaveState('unsaved');
-            }}
-            className="h-8 px-2.5 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 hidden md:block cursor-pointer shadow-2xs hover:border-slate-300"
-            title="Document Currency"
-          >
-            {CURRENCY_OPTIONS.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code} ({c.symbol})
-              </option>
-            ))}
-          </select>
+          {/* Document Currency Selector */}
+          <div className="hidden lg:flex items-center">
+            <select
+              value={doc.currency || 'USD'}
+              onChange={(e) => {
+                setDoc({ ...doc, currency: e.target.value });
+                setSaveState('unsaved');
+              }}
+              className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 cursor-pointer shadow-2xs hover:border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-forest/20"
+              title="Change Document Currency"
+            >
+              {CURRENCY_OPTIONS.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* Quick Duplicate Document */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDuplicateDocument}
-            leftIcon={<Copy className="w-3.5 h-3.5" />}
-            className="text-xs h-8 hidden xl:inline-flex text-slate-600 hover:text-ink"
-            title="Duplicate Document"
-          >
-            Duplicate
-          </Button>
-
-          {/* Safety Guides Toggle */}
+          {/* Safety Margins Guide Toggle */}
           <button
+            type="button"
             onClick={() => setShowSafetyGuides(!showSafetyGuides)}
             className={`h-8 px-2.5 rounded-lg border text-xs font-medium hidden xl:inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
-              showSafetyGuides ? 'bg-forest-50 border-forest text-forest font-semibold' : 'bg-white border-paper-border text-slate-500 hover:text-ink shadow-2xs'
+              showSafetyGuides 
+                ? 'bg-forest-50 border-forest text-forest font-semibold' 
+                : 'bg-white border-slate-200 text-slate-600 hover:text-ink hover:border-slate-300 shadow-2xs'
             }`}
             title="Toggle print safety margin guides"
           >
@@ -604,44 +604,38 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             </button>
           </div>
 
+          {/* Save Draft Button */}
           <Button
             variant="secondary"
             size="sm"
             onClick={handleSave}
             loading={isSaving}
-            leftIcon={<Save className="w-3.5 h-3.5" />}
-            className="text-xs h-8 hidden sm:inline-flex"
+            leftIcon={<Save className="w-3.5 h-3.5 text-slate-600" />}
+            className="text-xs font-semibold h-8 hidden sm:inline-flex border-slate-200 hover:bg-slate-50"
           >
             Save Draft
           </Button>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={triggerNativePrint}
-            leftIcon={<Printer className="w-3.5 h-3.5" />}
-            className="text-xs h-8 hidden md:inline-flex"
-          >
-            Print
-          </Button>
-
           {/* Download PDF Split Dropdown */}
           <div className="relative">
-            <div className="inline-flex rounded-lg shadow-2xs">
+            <div className="inline-flex rounded-lg shadow-xs">
               <Button
                 variant="primary"
                 size="sm"
                 onClick={handleDownloadPDF}
                 loading={isGenerating}
                 leftIcon={<Download className="w-3.5 h-3.5" />}
-                className="text-xs font-semibold h-8 rounded-r-none px-2.5 sm:px-3"
+                className="text-xs font-bold h-8 rounded-r-none px-3 bg-forest hover:bg-forest-900"
               >
-                <span className="hidden sm:inline">Download </span>PDF
+                <span className="hidden sm:inline">Export </span>PDF
               </Button>
               <button
                 type="button"
-                onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
-                className="px-2 bg-forest hover:bg-forest-900 text-mint border-l border-forest-800 rounded-r-lg flex items-center justify-center transition-colors focus:outline-hidden"
+                onClick={() => {
+                  setIsDownloadMenuOpen(!isDownloadMenuOpen);
+                  setIsMoreMenuOpen(false);
+                }}
+                className="px-2 bg-forest hover:bg-forest-900 text-mint border-l border-forest-800 rounded-r-lg flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Download options"
               >
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -649,14 +643,14 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             </div>
 
             {isDownloadMenuOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-paper-border py-1.5 z-50 animate-in fade-in duration-100">
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in duration-100">
                 <button
                   type="button"
                   onClick={() => {
                     setIsDownloadMenuOpen(false);
                     handleDownloadPDF();
                   }}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group"
+                  className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group cursor-pointer"
                 >
                   <div>
                     <p className="font-semibold text-ink group-hover:text-forest">Client Vector PDF</p>
@@ -672,7 +666,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                     window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
                     onShowToast?.('PDF Streaming', `Opened server vector PDF for ${doc.title}`, 'success');
                   }}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group border-t border-paper-border"
+                  className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group border-t border-slate-100 cursor-pointer"
                 >
                   <div>
                     <p className="font-semibold text-ink group-hover:text-forest">Server Vector PDF</p>
@@ -686,13 +680,94 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                     setIsDownloadMenuOpen(false);
                     triggerNativePrint();
                   }}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group border-t border-paper-border"
+                  className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group border-t border-slate-100 cursor-pointer"
                 >
                   <div>
                     <p className="font-semibold text-ink group-hover:text-forest">System Print Dialog</p>
                     <p className="text-[11px] text-slate-400">Save to PDF or send to local printer</p>
                   </div>
                   <Printer className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* More Actions Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsMoreMenuOpen(!isMoreMenuOpen);
+                setIsDownloadMenuOpen(false);
+              }}
+              className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-ink flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+              title="More Actions"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+
+            {isMoreMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in duration-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    handleDuplicateDocument();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                  <span className="font-medium group-hover:text-ink">Duplicate Document</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    triggerNativePrint();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                  <span className="font-medium group-hover:text-ink">Print Document</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    setShowSafetyGuides(!showSafetyGuides);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                    <span className="font-medium group-hover:text-ink">Print Margin Guides</span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${showSafetyGuides ? 'bg-forest-50 text-forest' : 'text-slate-400'}`}>
+                    {showSafetyGuides ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+                <div className="my-1 border-t border-slate-100" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    handleExportJson();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-slate-400 group-hover:text-forest" />
+                  <span className="font-medium group-hover:text-ink">Export JSON Schema</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    handleStartBlank();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                  <span className="font-medium">Clear / Start Blank</span>
                 </button>
               </div>
             )}
@@ -1284,28 +1359,28 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
 
         {/* Right Live Document Preview Viewport */}
         <div className={`flex-1 overflow-auto relative flex flex-col transition-colors duration-200 ${
-          deskTheme === 'dark' ? 'bg-[#0B0F12]' : 'bg-paper-subtle/70'
+          deskTheme === 'dark' ? 'bg-[#151D28]' : 'bg-[#F1F5F9]'
         } ${mobileMode === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
           {/* Subtle desk ambient texture */}
           {deskTheme === 'dark' ? (
             <>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 bg-emerald-500/10 blur-3xl pointer-events-none" />
-              <div className="absolute inset-0 bg-dot-grid-dark opacity-30 pointer-events-none" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-forest-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute inset-0 bg-dot-grid-dark opacity-25 pointer-events-none" />
             </>
           ) : (
-            <div className="absolute inset-0 bg-dot-grid opacity-40 pointer-events-none" />
+            <div className="absolute inset-0 bg-dot-grid opacity-35 pointer-events-none" />
           )}
 
           {/* Zoom & Viewport controls bar */}
           <div className={`sticky top-0 z-10 px-4 py-2 flex items-center justify-between border-b transition-colors ${
             deskTheme === 'dark'
-              ? 'bg-[#11171C]/90 backdrop-blur-md border-white/[0.08] text-slate-200'
-              : 'bg-white/85 backdrop-blur-sm border-paper-border text-slate-500 shadow-2xs'
+              ? 'bg-[#1B2636]/95 backdrop-blur-md border-slate-700/60 text-slate-200'
+              : 'bg-white/95 backdrop-blur-sm border-slate-200 text-slate-600 shadow-2xs'
           }`}>
             <div className="flex items-center gap-2 text-xs font-medium">
               <span className={`font-display font-semibold ${deskTheme === 'dark' ? 'text-white' : 'text-ink'}`}>Page 1</span>
               <span className="opacity-40 hidden sm:inline">•</span>
-              <span className="uppercase text-[11px] font-mono opacity-75 hidden sm:inline">{doc.pageSize} {doc.orientation}</span>
+              <span className="uppercase text-[11px] font-mono opacity-75 hidden sm:inline">{doc.pageSize} • {doc.orientation}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1315,8 +1390,8 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                 onClick={() => setDeskTheme(deskTheme === 'dark' ? 'light' : 'dark')}
                 className={`p-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
                   deskTheme === 'dark'
-                    ? 'bg-slate-800/80 border-slate-700 text-amber-400 hover:bg-slate-800'
-                    : 'bg-white border-paper-border text-slate-600 hover:bg-paper-warm'
+                    ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-750'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
                 title={`Switch to ${deskTheme === 'dark' ? 'Light' : 'Dark'} Studio Desk`}
               >
@@ -1325,7 +1400,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               </button>
 
               <div className={`flex items-center gap-1.5 p-1 rounded-lg border ${
-                deskTheme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-paper-subtle border-paper-border text-slate-600'
+                deskTheme === 'dark' ? 'bg-slate-800/90 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-600 shadow-2xs'
               }`}>
                 <button
                   onClick={() => setZoom(prev => Math.max(0.25, Number((prev - 0.1).toFixed(2))))}
@@ -1368,8 +1443,8 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
           <div className="flex-1 p-2 sm:p-6 lg:p-10 flex justify-center items-start overflow-auto relative z-0">
             <div className={`transition-all duration-300 ${
               deskTheme === 'dark'
-                ? 'shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.12)]'
-                : 'shadow-sheet'
+                ? 'shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.08)]'
+                : 'shadow-[0_20px_45px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.05)]'
             }`}>
               <LivePDFCanvas
                 document={doc}
