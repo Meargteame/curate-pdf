@@ -21,7 +21,9 @@ import {
   ExternalLink,
   Layers,
   Sun,
-  Moon
+  Moon,
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { DocumentData, LineItem, DocumentSection } from '../../types';
 import { 
@@ -38,6 +40,7 @@ import { Tabs } from '../../components/ui/Toast';
 import { Badge } from '../../components/ui/Badge';
 import { Dialog } from '../../components/ui/Dialog';
 import { Upload } from 'lucide-react';
+import { formatCurrency, getCurrencySymbol, CURRENCY_OPTIONS } from '../../utils/formatters';
 
 export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
   const [searchParams] = useSearchParams();
@@ -113,6 +116,8 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   const [isFullscreenPreview, setIsFullscreenPreview] = useState<boolean>(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState<boolean>(false);
   const [deskTheme, setDeskTheme] = useState<'dark' | 'light'>('dark');
+  const [lastSavedTime, setLastSavedTime] = useState<string>('just now');
+  const isFirstRender = React.useRef(true);
 
   // Auto-fit zoom on window resize if user hasn't heavily customized it
   useEffect(() => {
@@ -140,6 +145,70 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [doc]);
 
+  // Debounced Auto-Save
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    setSaveState('unsaved');
+    const timer = setTimeout(async () => {
+      setSaveState('saving');
+      upsertDocument(doc);
+      try {
+        await fetch(`/api/v1/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(doc),
+        });
+      } catch {
+        try {
+          await fetch('/api/v1/documents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(doc),
+          });
+        } catch {}
+      }
+      setSaveState('saved');
+      setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [doc]);
+
+  // Warn before leaving if unsaved changes exist
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveState === 'unsaved') {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveState]);
+
+  // Quick Duplicate Current Document
+  const handleDuplicateDocument = () => {
+    const newId = `doc-${Date.now().toString(36)}`;
+    const duplicated: DocumentData = {
+      ...doc,
+      id: newId,
+      title: `${doc.title} (Copy)`,
+      referenceNumber: `${doc.referenceNumber}-COPY`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'draft',
+    };
+    upsertDocument(duplicated);
+    if (onShowToast) {
+      onShowToast('Document Duplicated', `Created "${duplicated.title}"`, 'success');
+    }
+    navigate(`/app/editor?id=${newId}`);
+  };
+
   // Live fetch from backend API if docId is provided
   useEffect(() => {
     if (docId) {
@@ -155,19 +224,21 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
   }, [docId]);
 
   // Template Switching & Blank Document
-  const handleSwitchTemplate = (tplId: string) => {
+  const [keepContentOnSwitch, setKeepContentOnSwitch] = useState<boolean>(true);
+
+  const handleSwitchTemplate = (tplId: string, keepContent: boolean = keepContentOnSwitch) => {
     const matched = templates.find(t => t.id === tplId);
     if (!matched) return;
     setDoc(prev => ({
       ...prev,
       templateId: matched.id,
       category: matched.category,
-      title: prev.title || matched.defaultData.title || matched.name,
+      title: keepContent && prev.title ? prev.title : (matched.defaultData.title || matched.name),
       referenceNumber: prev.referenceNumber || matched.defaultData.referenceNumber || `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
-      sections: matched.defaultData.sections || prev.sections,
-      lineItems: matched.defaultData.lineItems || prev.lineItems,
-      subtotal: matched.defaultData.subtotal || prev.subtotal,
-      total: matched.defaultData.total || prev.total,
+      sections: keepContent && prev.sections && prev.sections.length > 0 ? prev.sections : (matched.defaultData.sections || []),
+      lineItems: keepContent && prev.lineItems && prev.lineItems.length > 0 ? prev.lineItems : (matched.defaultData.lineItems || []),
+      subtotal: keepContent && prev.subtotal !== undefined ? prev.subtotal : (matched.defaultData.subtotal || 0),
+      total: keepContent && prev.total !== undefined ? prev.total : (matched.defaultData.total || 0),
       pageSize: matched.defaultData.pageSize || prev.pageSize,
       orientation: matched.defaultData.orientation || prev.orientation,
     }));
@@ -315,6 +386,18 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
       ...prev,
       sections: [...(prev.sections || []), newSec],
     }));
+    setSaveState('unsaved');
+  };
+
+  const handleMoveSection = (index: number, direction: 'up' | 'down') => {
+    if (!doc.sections) return;
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= doc.sections.length) return;
+    const updated = [...doc.sections];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(target, 0, moved);
+    setDoc(prev => ({ ...prev, sections: updated }));
+    setSaveState('unsaved');
   };
 
   const handleUpdateSection = (id: string, field: keyof DocumentSection, value: string) => {
@@ -327,6 +410,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
         return sec;
       }),
     }));
+    setSaveState('unsaved');
   };
 
   const handleRemoveSection = (id: string) => {
@@ -334,6 +418,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
       ...prev,
       sections: (prev.sections || []).filter(sec => sec.id !== id),
     }));
+    setSaveState('unsaved');
   };
 
   // Save Document
@@ -425,23 +510,23 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               />
               <Badge status={doc.status} size="sm" className="hidden md:inline-flex" />
               
-              {/* Cloud Save Indicator */}
+              {/* Auto-Save Status Pill */}
               {saveState === 'saved' && (
-                <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Saved
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <CheckCircle className="w-3 h-3 text-emerald-600" />
+                  <span>Saved {lastSavedTime}</span>
                 </span>
               )}
               {saveState === 'unsaved' && (
-                <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-amber-700 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  Unsaved changes
+                  <span>Unsaved changes</span>
                 </span>
               )}
               {saveState === 'saving' && (
-                <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] text-forest font-semibold bg-forest-50 px-2 py-0.5 rounded-full border border-forest-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-forest animate-ping" />
-                  Saving...
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-forest font-semibold bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200">
+                  <Loader2 className="w-3 h-3 animate-spin text-forest" />
+                  <span>Saving...</span>
                 </span>
               )}
             </div>
@@ -452,7 +537,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               </span>
               <button
                 onClick={() => setIsTemplatePickerOpen(true)}
-                className="text-[11px] font-semibold text-forest hover:underline"
+                className="text-[11px] font-semibold text-forest hover:underline cursor-pointer"
               >
                 Change Layout
               </button>
@@ -469,22 +554,33 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
               setDoc({ ...doc, currency: e.target.value });
               setSaveState('unsaved');
             }}
-            className="h-8 px-2 rounded-lg border border-paper-border bg-paper-subtle text-xs font-mono font-medium text-slate-700 hidden md:block"
+            className="h-8 px-2.5 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 hidden md:block cursor-pointer shadow-2xs hover:border-slate-300"
             title="Document Currency"
           >
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-            <option value="CAD">CAD ($)</option>
-            <option value="AUD">AUD ($)</option>
-            <option value="JPY">JPY (¥)</option>
+            {CURRENCY_OPTIONS.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} ({c.symbol})
+              </option>
+            ))}
           </select>
+
+          {/* Quick Duplicate Document */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDuplicateDocument}
+            leftIcon={<Copy className="w-3.5 h-3.5" />}
+            className="text-xs h-8 hidden xl:inline-flex text-slate-600 hover:text-ink"
+            title="Duplicate Document"
+          >
+            Duplicate
+          </Button>
 
           {/* Safety Guides Toggle */}
           <button
             onClick={() => setShowSafetyGuides(!showSafetyGuides)}
-            className={`h-8 px-2.5 rounded-lg border text-xs font-medium hidden xl:inline-flex items-center gap-1.5 transition-colors ${
-              showSafetyGuides ? 'bg-forest-50 border-forest text-forest font-semibold' : 'bg-white border-paper-border text-slate-500 hover:text-ink'
+            className={`h-8 px-2.5 rounded-lg border text-xs font-medium hidden xl:inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
+              showSafetyGuides ? 'bg-forest-50 border-forest text-forest font-semibold' : 'bg-white border-paper-border text-slate-500 hover:text-ink shadow-2xs'
             }`}
             title="Toggle print safety margin guides"
           >
@@ -789,7 +885,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                             />
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Rate ({doc.currency || '$'})</span>
+                            <span className="text-[10px] text-slate-400 font-semibold uppercase">Rate ({getCurrencySymbol(doc.currency)})</span>
                             <input
                               type="number"
                               min="0"
@@ -802,7 +898,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                           <div className="text-right pb-1">
                             <span className="text-[10px] text-slate-400 font-semibold uppercase block">Line Total</span>
                             <span className="font-mono font-bold text-ink text-xs">
-                              {doc.currency || '$'}{((Number(item.quantity) || 0) * (Number(item.rate) || 0)).toLocaleString()}
+                              {formatCurrency((Number(item.quantity) || 0) * (Number(item.rate) || 0), doc.currency)}
                             </span>
                           </div>
                         </div>
@@ -848,23 +944,23 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                     <div className="pt-2 border-t border-paper-border space-y-1 text-xs">
                       <div className="flex justify-between text-slate-500">
                         <span>Subtotal:</span>
-                        <span className="font-mono">{doc.currency || '$'}{(doc.subtotal || 0).toLocaleString()}</span>
+                        <span className="font-mono font-medium">{formatCurrency(doc.subtotal || 0, doc.currency)}</span>
                       </div>
                       {(doc.discountTotal || 0) > 0 && (
                         <div className="flex justify-between text-emerald-700">
                           <span>Discount ({doc.discountPercent}%):</span>
-                          <span className="font-mono">-{doc.currency || '$'}{doc.discountTotal?.toLocaleString()}</span>
+                          <span className="font-mono font-medium">-{formatCurrency(doc.discountTotal || 0, doc.currency)}</span>
                         </div>
                       )}
                       {(doc.taxTotal || 0) > 0 && (
                         <div className="flex justify-between text-slate-500">
                           <span>Tax / VAT ({doc.taxPercent}%):</span>
-                          <span className="font-mono">+{doc.currency || '$'}{doc.taxTotal?.toLocaleString()}</span>
+                          <span className="font-mono font-medium">+{formatCurrency(doc.taxTotal || 0, doc.currency)}</span>
                         </div>
                       )}
                       <div className="flex justify-between font-bold text-ink text-sm pt-1 border-t border-slate-200">
-                        <span>Grand Total:</span>
-                        <span className="font-mono text-forest">{doc.currency || '$'}{(doc.total || 0).toLocaleString()}</span>
+                        <span>Grand Total ({doc.currency || 'USD'}):</span>
+                        <span className="font-mono text-forest">{formatCurrency(doc.total || 0, doc.currency)}</span>
                       </div>
                     </div>
                   </div>
@@ -900,19 +996,41 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                 </div>
 
                 <div className="space-y-3">
-                  {(doc.sections || []).map((sec) => (
-                    <div key={sec.id} className="p-3 rounded-lg border border-paper-border bg-paper-subtle/50 space-y-2">
+                  {(doc.sections || []).map((sec, idx) => (
+                    <div key={sec.id} className="p-3.5 rounded-xl border border-paper-border bg-white shadow-2xs space-y-2.5 hover:border-slate-300 transition-colors">
                       <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-0.5 text-slate-400">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => handleMoveSection(idx, 'up')}
+                            className="p-1 hover:text-ink disabled:opacity-30 disabled:pointer-events-none rounded hover:bg-slate-100 cursor-pointer"
+                            title="Move section up"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === (doc.sections || []).length - 1}
+                            onClick={() => handleMoveSection(idx, 'down')}
+                            className="p-1 hover:text-ink disabled:opacity-30 disabled:pointer-events-none rounded hover:bg-slate-100 cursor-pointer"
+                            title="Move section down"
+                          >
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
                         <input
                           type="text"
                           value={sec.title}
                           onChange={(e) => handleUpdateSection(sec.id, 'title', e.target.value)}
                           placeholder="Section Title"
-                          className="flex-1 text-xs font-bold bg-white border border-paper-border rounded px-2 py-1"
+                          className="flex-1 text-xs font-bold text-ink bg-slate-50 focus:bg-white border border-paper-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-forest transition-colors"
                         />
                         <button
+                          type="button"
                           onClick={() => handleRemoveSection(sec.id)}
-                          className="text-slate-400 hover:text-red-600 p-1"
+                          className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
                           title="Remove section"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -923,7 +1041,7 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
                         value={sec.content}
                         onChange={(e) => handleUpdateSection(sec.id, 'content', e.target.value)}
                         placeholder="Section content..."
-                        className="w-full text-xs bg-white border border-paper-border rounded p-2"
+                        className="w-full text-xs text-slate-700 bg-slate-50 focus:bg-white border border-paper-border rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-forest resize-y leading-relaxed transition-colors"
                       />
                     </div>
                   ))}
@@ -1278,7 +1396,19 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
         }
       >
         <div className="space-y-4">
-          <div className="p-3 rounded-lg border border-dashed border-paper-border hover:border-forest/50 bg-paper-subtle/50 flex items-center justify-between transition-colors">
+          <div className="flex items-center justify-between pb-2 border-b border-paper-border">
+            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={keepContentOnSwitch}
+                onChange={(e) => setKeepContentOnSwitch(e.target.checked)}
+                className="rounded border-paper-border text-forest focus:ring-forest cursor-pointer"
+              />
+              <span className="font-medium">Preserve my current client details & line items</span>
+            </label>
+          </div>
+
+          <div className="p-3.5 rounded-xl border border-dashed border-paper-border hover:border-forest/50 bg-paper-subtle/50 flex items-center justify-between transition-colors">
             <div>
               <h4 className="font-display font-bold text-sm text-ink">Blank Document</h4>
               <p className="text-xs text-slate-500">Start with minimal fields and build your document from scratch</p>
@@ -1288,18 +1418,18 @@ export const DocumentEditor: React.FC<{ onShowToast?: (title: string, message?: 
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             {templates.map((tpl) => (
               <div
                 key={tpl.id}
-                onClick={() => handleSwitchTemplate(tpl.id)}
-                className="p-3.5 rounded-lg border border-paper-border hover:border-forest hover:bg-forest-50/20 cursor-pointer transition-all space-y-1.5"
+                onClick={() => handleSwitchTemplate(tpl.id, keepContentOnSwitch)}
+                className="p-3.5 rounded-xl border border-paper-border hover:border-forest hover:bg-forest-50/20 cursor-pointer transition-all space-y-1.5 shadow-2xs group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-forest font-display bg-forest-50 px-2 py-0.5 rounded border border-forest-100">
                     {tpl.category}
                   </span>
-                  <span className="text-[11px] font-semibold text-forest hover:underline">Apply</span>
+                  <span className="text-[11px] font-semibold text-forest group-hover:underline">Apply →</span>
                 </div>
                 <h5 className="font-display font-bold text-xs text-ink">{tpl.name}</h5>
                 <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{tpl.description}</p>

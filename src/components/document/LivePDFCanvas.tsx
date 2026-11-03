@@ -2,6 +2,7 @@ import React from 'react';
 import { DocumentData, BrandKitConfig } from '../../types';
 import { cn } from '../../utils/cn';
 import { ShieldCheck, Award } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatters';
 
 interface LivePDFCanvasProps {
   document: DocumentData;
@@ -226,9 +227,9 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
                       <tr key={item.id} className="hover:bg-slate-50/60">
                         <td className="py-2.5 px-3 font-medium text-ink">{item.description}</td>
                         <td className="py-2.5 px-3 text-center">{item.quantity}</td>
-                        <td className="py-2.5 px-3 text-right">${item.rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td className="py-2.5 px-3 text-right">{formatCurrency(item.rate, doc.currency)}</td>
                         <td className="py-2.5 px-3 text-right font-semibold text-ink">
-                          ${(item.quantity * item.rate).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          {formatCurrency((item.quantity || 0) * (item.rate || 0), doc.currency)}
                         </td>
                       </tr>
                     ))}
@@ -238,15 +239,21 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
 
               {/* Financial Totals */}
               <div className="flex justify-end mt-4">
-                <div className="w-64 space-y-1.5 text-xs">
+                <div className="w-72 space-y-1.5 text-xs">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal</span>
-                    <span>${(doc.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    <span>{formatCurrency(doc.subtotal || 0, doc.currency)}</span>
                   </div>
+                  {doc.discountTotal !== undefined && doc.discountTotal > 0 && (
+                    <div className="flex justify-between text-emerald-700 font-medium">
+                      <span>Discount {doc.discountPercent ? `(${doc.discountPercent}%)` : ''}</span>
+                      <span>-{formatCurrency(doc.discountTotal, doc.currency)}</span>
+                    </div>
+                  )}
                   {doc.taxTotal !== undefined && doc.taxTotal > 0 && (
                     <div className="flex justify-between text-slate-600">
-                      <span>Tax (Estimated)</span>
-                      <span>${doc.taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      <span>Tax {doc.taxPercent ? `(${doc.taxPercent}%)` : ''}</span>
+                      <span>+{formatCurrency(doc.taxTotal, doc.currency)}</span>
                     </div>
                   )}
                   <div 
@@ -254,7 +261,7 @@ export const LivePDFCanvas: React.FC<LivePDFCanvasProps> = ({
                   >
                     <span>Total Due ({doc.currency || 'USD'})</span>
                     <span className="text-base" style={{ color: primaryColor }}>
-                      ${(doc.total || doc.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {formatCurrency(doc.total || doc.subtotal || 0, doc.currency)}
                     </span>
                   </div>
                 </div>
