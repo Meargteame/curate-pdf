@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowRight, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Menu, X, ArrowRight, ChevronRight } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
@@ -156,10 +156,6 @@ export const MarketingLayout: React.FC = () => {
               <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
                 Professional PDFs, without the busywork. Create, customize, preview, and generate consistent documents using reusable templates and your own brand.
               </p>
-              <div className="flex items-center gap-2 text-xs text-mint font-medium pt-2">
-                <ShieldCheck className="w-4 h-4 text-mint" />
-                <span>Client-side high-fidelity vector rendering</span>
-              </div>
             </div>
 
             {/* Links columns */}
