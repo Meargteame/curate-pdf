@@ -80,17 +80,13 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
       {/* Workspace Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 pb-1">
         <div>
-          <div className="flex items-center gap-2.5 mb-1.5">
+          <div className="mb-1.5">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink tracking-tight">
               Welcome back, {userProfile.name.split(' ')[0] || 'Sarah'}
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>{brandKit.companyName || userProfile.company}</span>
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500">
-            {userProfile.planStatus || 'Pro Workspace'} • Design, compile, and batch-render print-ready vector PDFs.
+            Design, compile, and batch-render print-ready vector PDFs.
           </p>
         </div>
 
