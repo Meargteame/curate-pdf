@@ -62,6 +62,7 @@ export function App() {
           <Route path="/app/templates" element={<TemplateGallery />} />
           <Route path="/app/editor" element={<DocumentEditor onShowToast={showToast} />} />
           <Route path="/app/brand-kit" element={<BrandKit onShowToast={showToast} />} />
+          <Route path="/app/brand" element={<Navigate to="/app/brand-kit" replace />} />
           <Route path="/app/bulk" element={<BulkGeneration onShowToast={showToast} />} />
           <Route path="/app/developer" element={<DeveloperTools onShowToast={showToast} />} />
           <Route path="/app/settings" element={<Settings onShowToast={showToast} />} />
