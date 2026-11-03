@@ -36,23 +36,23 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 antialiased">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
-        <NavLink to="/" className="inline-block hover:opacity-90 transition-opacity">
-          <Logo size="xl" />
-        </NavLink>
-        <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink">
-          Sign in to CuratePDF
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500">
-          Or{' '}
-          <NavLink to="/register" className="font-semibold text-forest hover:underline">
-            create a new organization workspace
+    <div className="min-h-screen bg-paper flex flex-col justify-start items-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 antialiased overflow-y-auto">
+      <div className="w-full max-w-[440px] my-auto space-y-6">
+        <div className="text-center space-y-2">
+          <NavLink to="/" className="inline-block hover:opacity-90 transition-opacity">
+            <Logo size="lg" />
           </NavLink>
-        </p>
-      </div>
+          <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink">
+            Sign in to CuratePDF
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Or{' '}
+            <NavLink to="/register" className="font-semibold text-forest hover:underline">
+              create a new organization workspace
+            </NavLink>
+          </p>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[440px]">
         <div className="bg-white p-7 sm:p-9 rounded-2xl border border-slate-200/90 shadow-xl space-y-6">
           {/* Quick Google SSO */}
           <div>
