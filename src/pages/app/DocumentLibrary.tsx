@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { 
   Plus, 
@@ -11,38 +11,46 @@ import {
   Copy, 
   Download, 
   FileCode, 
-  FileText,
-  MoreVertical,
-  Check,
-  FolderOpen,
-  Tag,
-  Archive,
-  X,
-  ExternalLink
+  FileText, 
+  MoreVertical, 
+  Check, 
+  FolderOpen, 
+  Tag, 
+  Archive, 
+  X, 
+  ExternalLink,
+  Eye,
+  CheckCircle2,
+  FileJson,
+  Clock,
+  Layers
 } from 'lucide-react';
 import { DocumentData, DocumentCategory, DocumentStatus } from '../../types';
 import { 
   getStoredDocuments, 
   saveStoredDocuments, 
   deleteStoredDocument, 
-  upsertDocument 
+  upsertDocument,
+  getStoredBrandKit
 } from '../../utils/storage';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Dialog } from '../../components/ui/Dialog';
 import { EmptyState } from '../../components/ui/Toast';
+import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
 
 export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void }> = ({ onShowToast }) => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<DocumentData[]>(() => getStoredDocuments());
+  const brandKit = getStoredBrandKit();
   
   // Dynamic fetch from server database on mount
-  React.useEffect(() => {
+  useEffect(() => {
     fetch('/api/v1/documents')
       .then(res => res.json())
       .then(json => {
-        if (json.data && Array.isArray(json.data)) {
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
           setDocuments(json.data);
           saveStoredDocuments(json.data);
         }
@@ -58,10 +66,55 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
   const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => typeof window !== 'undefined' && window.innerWidth < 640 ? 'grid' : 'list');
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
 
-  // Dialog states for Rename & Delete confirmation
+  // Dialog states for Quick Preview, Rename & Delete
+  const [docToPreview, setDocToPreview] = useState<DocumentData | null>(null);
   const [docToRename, setDocToRename] = useState<DocumentData | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [docToDelete, setDocToDelete] = useState<DocumentData | null>(null);
+
+  // Status Quick-Toggle Handler
+  const handleUpdateStatus = async (doc: DocumentData, newStatus: DocumentStatus) => {
+    const updatedDoc: DocumentData = {
+      ...doc,
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      await fetch(`/api/v1/documents/${doc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedDoc),
+      });
+    } catch {}
+    const updated = upsertDocument(updatedDoc);
+    setDocuments(updated);
+    if (onShowToast) {
+      onShowToast('Status Updated', `"${doc.title}" marked as ${newStatus}`, 'success');
+    }
+  };
+
+  // Bulk Status Update Handler
+  const handleBulkUpdateStatus = async (newStatus: DocumentStatus) => {
+    if (selectedDocIds.length === 0) return;
+    const updatedDocs = documents.map(d => {
+      if (selectedDocIds.includes(d.id)) {
+        const u = { ...d, status: newStatus, updatedAt: new Date().toISOString() };
+        fetch(`/api/v1/documents/${d.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(u),
+        }).catch(() => {});
+        return u;
+      }
+      return d;
+    });
+    saveStoredDocuments(updatedDocs);
+    setDocuments(updatedDocs);
+    if (onShowToast) {
+      onShowToast('Batch Updated', `Marked ${selectedDocIds.length} documents as ${newStatus}`, 'success');
+    }
+    setSelectedDocIds([]);
+  };
 
   // Bulk deletion handler
   const handleBulkDelete = async () => {
@@ -93,27 +146,42 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
         date: d.date,
         summary: d.title,
       }));
-      const res = await fetch('/api/v1/jobs/bulk', {
+      const res = await fetch('/api/v1/bulk/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          templateId: selectedDocs[0]?.templateId || 'tpl-invoice-minimal',
+          templateId: selectedDocs[0]?.templateId || 'tpl-invoice-clean',
           records,
         }),
       });
       if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `curatepdf_export_${new Date().toISOString().split('T')[0]}.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-        if (onShowToast) onShowToast('ZIP Downloaded', `Successfully downloaded archive of ${selectedDocIds.length} documents.`, 'success');
+        const jobData = await res.json();
+        const jobId = jobData.job?.id || jobData.data?.id;
+        if (jobId) {
+          window.location.href = `/api/v1/bulk/jobs/${jobId}/download`;
+          if (onShowToast) onShowToast('ZIP Archive Ready', `Downloading ${selectedDocIds.length} documents.`, 'success');
+          return;
+        }
       }
+      // Direct stream fallback
+      window.open(`/api/v1/documents/${selectedDocs[0].id}/pdf`, '_blank');
+      if (onShowToast) onShowToast('PDF Streamed', 'Downloading document PDF.', 'success');
     } catch {
       if (onShowToast) onShowToast('Download Failed', 'Could not assemble ZIP archive.', 'error');
     }
+  };
+
+  // Single Document JSON Export
+  const handleExportJson = (doc: DocumentData) => {
+    const jsonStr = JSON.stringify(doc, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.referenceNumber || 'document'}_export.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    if (onShowToast) onShowToast('Data Exported', `Downloaded JSON schema for "${doc.title}"`, 'success');
   };
 
   const handleToggleSelect = (id: string) => {
@@ -209,21 +277,28 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-card border border-paper-border shadow-card">
         <div>
-          <h1 className="text-2xl font-display font-bold text-ink">Document Library</h1>
-          <p className="text-xs text-slate-500">Manage, search, edit, and export your generated PDF documents</p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-forest/10 flex items-center justify-center text-forest">
+              <FolderOpen className="w-4 h-4" />
+            </div>
+            <div>
+              <h1 className="text-xl font-display font-bold text-ink">Document Library</h1>
+              <p className="text-xs text-slate-500">Manage, search, preview, and batch export your generated vector PDF documents</p>
+            </div>
+          </div>
         </div>
         <Button
           variant="primary"
-          size="md"
+          size="sm"
           onClick={() => navigate('/app/editor')}
-          leftIcon={<Plus className="w-4 h-4" />}
+          leftIcon={<Plus className="w-3.5 h-3.5" />}
           className="w-full sm:w-auto justify-center"
         >
-          Create document
+          Create Document
         </Button>
       </div>
 
@@ -237,6 +312,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
         ].map((tab) => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setSelectedStatus(tab.id)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 shrink-0 ${
               selectedStatus === tab.id
@@ -256,7 +332,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 rounded-card border border-paper-border shadow-card flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="w-full md:w-72">
+        <div className="w-full md:w-80">
           <Input
             placeholder="Search documents or clients..."
             value={searchQuery}
@@ -269,7 +345,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
+            className="h-9 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
           >
             <option value="all">All Categories</option>
             <option value="business">Business</option>
@@ -282,20 +358,9 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           </select>
 
           <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
-          >
-            <option value="all">All Statuses</option>
-            <option value="ready">Ready</option>
-            <option value="generated">Generated</option>
-            <option value="draft">Draft</option>
-          </select>
-
-          <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-9.5 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
+            className="h-9 px-3 rounded-lg border border-paper-border bg-white text-xs font-medium text-slate-700 w-full sm:w-auto"
           >
             <option value="updated">Recently Updated</option>
             <option value="date">Issue Date</option>
@@ -303,8 +368,9 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           </select>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center justify-center bg-paper-subtle p-1 rounded-lg border border-paper-border w-full sm:w-auto">
+          <div className="flex items-center justify-center bg-paper-subtle p-0.5 rounded-lg border border-paper-border w-full sm:w-auto">
             <button
+              type="button"
               onClick={() => setViewMode('list')}
               className={`flex-1 sm:flex-none p-1.5 rounded flex items-center justify-center ${viewMode === 'list' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
               title="List View"
@@ -312,6 +378,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
               <List className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('grid')}
               className={`flex-1 sm:flex-none p-1.5 rounded flex items-center justify-center ${viewMode === 'grid' ? 'bg-white shadow-2xs text-forest' : 'text-slate-400'}`}
               title="Grid View"
@@ -329,7 +396,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           title="No documents found"
           description={
             searchQuery || selectedCategory !== 'all' || selectedStatus !== 'all'
-              ? 'Try adjusting your search criteria or filters.'
+              ? 'Try adjusting your search criteria or category filters.'
               : 'Your document library is currently empty. Start by creating a document or choosing a template.'
           }
           action={
@@ -384,7 +451,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
               <tbody className="divide-y divide-paper-border text-slate-700">
                 {filteredDocs.map((doc) => (
                   <tr key={doc.id} className="hover:bg-paper-subtle/40 transition-colors">
-                    <td className="py-3.5 px-4 w-10">
+                    <td className="py-3 px-4 w-10">
                       <input 
                         type="checkbox"
                         checked={selectedDocIds.includes(doc.id)}
@@ -392,7 +459,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                         className="rounded border-paper-border text-forest focus:ring-forest cursor-pointer"
                       />
                     </td>
-                    <td className="py-3.5 px-4 font-medium text-ink">
+                    <td className="py-3 px-4 font-medium text-ink">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded bg-forest-50 text-forest flex items-center justify-center shrink-0 border border-forest-100">
                           <FileText className="w-4 h-4" />
@@ -400,7 +467,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                         <div>
                           <NavLink
                             to={`/app/editor?id=${doc.id}`}
-                            className="font-semibold text-ink hover:text-forest transition-colors block text-sm"
+                            className="font-semibold text-ink hover:text-forest transition-colors block text-sm leading-tight"
                           >
                             {doc.title}
                           </NavLink>
@@ -410,27 +477,51 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 capitalize">{doc.category}</td>
-                    <td className="py-3.5 px-4 font-mono text-slate-600">{doc.referenceNumber}</td>
-                    <td className="py-3.5 px-4">
-                      <Badge status={doc.status} size="sm" />
+                    <td className="py-3 px-4 capitalize text-slate-600">{doc.category}</td>
+                    <td className="py-3 px-4 font-mono text-slate-600">{doc.referenceNumber}</td>
+                    <td className="py-3 px-4">
+                      {/* Interactive Status Switcher Dropdown */}
+                      <select
+                        value={doc.status}
+                        onChange={(e) => handleUpdateStatus(doc, e.target.value as DocumentStatus)}
+                        className={`text-[11px] font-semibold rounded-md px-2 py-0.5 border cursor-pointer ${
+                          doc.status === 'ready'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : doc.status === 'generated'
+                            ? 'bg-blue-50 text-blue-800 border-blue-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                        }`}
+                      >
+                        <option value="draft">Draft</option>
+                        <option value="ready">Ready</option>
+                        <option value="generated">Generated</option>
+                      </select>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-ink">
+                    <td className="py-3 px-4 font-semibold text-ink font-mono">
                       {doc.total ? `$${doc.total.toLocaleString()}` : '—'}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400 text-[11px]">
+                    <td className="py-3 px-4 text-slate-400 text-[11px]">
                       {new Date(doc.updatedAt).toLocaleDateString()}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDocToPreview(doc)}
+                          className="h-8 w-8 text-forest hover:bg-forest-50"
+                          title="Quick Preview"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => {
                             window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
-                            if (onShowToast) onShowToast('Downloading PDF', `Streaming real vector PDF for "${doc.title}"`, 'info');
+                            if (onShowToast) onShowToast('Downloading PDF', `Streaming vector PDF for "${doc.title}"`, 'info');
                           }}
-                          className="h-8 w-8 text-forest hover:bg-forest-50"
+                          className="h-8 w-8 text-slate-600 hover:text-forest hover:bg-forest-50"
                           title="Download PDF"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -443,6 +534,15 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                           title="Open & Edit"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleExportJson(doc)}
+                          className="h-8 w-8 text-slate-500 hover:text-ink"
+                          title="Export JSON Data"
+                        >
+                          <FileJson className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -490,7 +590,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
               {/* Top Document Paper Header Visual */}
               <div 
                 className="h-28 bg-paper-subtle p-4 border-b border-paper-border flex flex-col justify-between relative cursor-pointer"
-                onClick={() => navigate(`/app/editor?id=${doc.id}`)}
+                onClick={() => setDocToPreview(doc)}
               >
                 <div className="h-1.5 w-full rounded-full bg-forest" />
                 <div className="space-y-1">
@@ -544,23 +644,23 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
-                        onShowToast?.('Downloading PDF', `Streaming vector PDF for "${doc.title}"`, 'info');
-                      }}
+                      onClick={() => setDocToPreview(doc)}
                       className="h-7 w-7 text-forest hover:bg-forest-50"
-                      title="Download PDF"
+                      title="Quick Preview"
                     >
-                      <Download className="w-3.5 h-3.5" />
+                      <Eye className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDuplicate(doc)}
-                      className="h-7 w-7 text-slate-500 hover:text-ink"
-                      title="Duplicate"
+                      onClick={() => {
+                        window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
+                        onShowToast?.('Downloading PDF', `Streaming vector PDF for "${doc.title}"`, 'info');
+                      }}
+                      className="h-7 w-7 text-slate-600 hover:text-forest"
+                      title="Download PDF"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      <Download className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="secondary"
@@ -577,6 +677,62 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
           ))}
         </div>
       )}
+
+      {/* Quick Document Preview Modal */}
+      <Dialog
+        isOpen={!!docToPreview}
+        onClose={() => setDocToPreview(null)}
+        title={docToPreview ? `Preview: ${docToPreview.title}` : 'Document Preview'}
+        description={docToPreview ? `${docToPreview.referenceNumber} • Prepared for ${docToPreview.clientCompany || docToPreview.clientName || 'Internal'}` : ''}
+        maxWidth="4xl"
+        footer={
+          docToPreview ? (
+            <div className="flex items-center justify-between w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportJson(docToPreview)}
+                leftIcon={<FileJson className="w-3.5 h-3.5" />}
+              >
+                Export JSON
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.open(`/api/v1/documents/${docToPreview.id}/pdf`, '_blank');
+                    if (onShowToast) onShowToast('Downloading PDF', 'Streaming vector PDF', 'info');
+                  }}
+                  leftIcon={<Download className="w-3.5 h-3.5 text-forest" />}
+                >
+                  Download PDF
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    navigate(`/app/editor?id=${docToPreview.id}`);
+                  }}
+                  leftIcon={<Edit3 className="w-3.5 h-3.5" />}
+                >
+                  Edit in Studio
+                </Button>
+              </div>
+            </div>
+          ) : undefined
+        }
+      >
+        {docToPreview && (
+          <div className="bg-paper-subtle/80 p-4 rounded-xl border border-paper-border flex justify-center max-h-[65vh] overflow-y-auto">
+            <LivePDFCanvas
+              document={docToPreview}
+              brandKit={brandKit}
+              zoom={0.70}
+            />
+          </div>
+        )}
+      </Dialog>
 
       {/* Rename Document Dialog */}
       <Dialog
@@ -636,6 +792,23 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
             {selectedDocIds.length} doc{selectedDocIds.length > 1 ? 's' : ''} selected
           </span>
           <div className="h-4 w-px bg-slate-700 hidden sm:block" />
+          
+          {/* Bulk Status Transitions */}
+          <button
+            type="button"
+            onClick={() => handleBulkUpdateStatus('ready')}
+            className="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 font-medium"
+          >
+            Mark Ready
+          </button>
+          <button
+            type="button"
+            onClick={() => handleBulkUpdateStatus('generated')}
+            className="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-medium"
+          >
+            Mark Generated
+          </button>
+
           <Button
             variant="outline"
             size="sm"
@@ -643,7 +816,7 @@ export const DocumentLibrary: React.FC<{ onShowToast?: (title: string, message?:
             className="h-7 text-xs bg-slate-800 text-slate-200 border-slate-600 hover:bg-slate-700 hover:text-white"
             leftIcon={<Archive className="w-3.5 h-3.5 text-sage" />}
           >
-            ZIP
+            Download ZIP
           </Button>
           <Button
             variant="outline"
