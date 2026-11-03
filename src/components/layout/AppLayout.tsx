@@ -11,7 +11,6 @@ import {
   Plus, 
   Menu, 
   X, 
-  ExternalLink, 
   ChevronRight, 
   Bell, 
   LogOut, 
@@ -94,31 +93,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   const isEditor = location.pathname.startsWith('/app/editor');
 
-  const navSections = [
-    {
-      title: 'WORKSPACE',
-      items: [
-        { label: 'Overview', to: '/app', icon: <LayoutDashboard className="w-4 h-4" />, end: true },
-        { label: 'Documents', to: '/app/documents', icon: <Files className="w-4 h-4" /> },
-        { label: 'Templates', to: '/app/templates', icon: <FileCode className="w-4 h-4" /> },
-        { label: 'Brand Kit', to: '/app/brand-kit', icon: <Palette className="w-4 h-4" /> },
-      ]
-    },
-    {
-      title: 'AUTOMATION',
-      items: [
-        { label: 'Bulk Generation', to: '/app/bulk', icon: <Layers className="w-4 h-4" /> },
-        { label: 'Developer Tools', to: '/app/developer', icon: <Terminal className="w-4 h-4" /> },
-      ]
-    },
-    {
-      title: 'PREFERENCES',
-      items: [
-        { label: 'Settings', to: '/app/settings', icon: <Settings className="w-4 h-4" /> },
-      ]
-    }
+  const navItems = [
+    { label: 'Overview', to: '/app', icon: <LayoutDashboard className="w-4 h-4" />, end: true },
+    { label: 'Documents', to: '/app/documents', icon: <Files className="w-4 h-4" /> },
+    { label: 'Templates', to: '/app/templates', icon: <FileCode className="w-4 h-4" /> },
+    { label: 'Brand Kit', to: '/app/brand-kit', icon: <Palette className="w-4 h-4" /> },
+    { label: 'Bulk Generation', to: '/app/bulk', icon: <Layers className="w-4 h-4" /> },
+    { label: 'Developer Tools', to: '/app/developer', icon: <Terminal className="w-4 h-4" /> },
+    { label: 'Settings', to: '/app/settings', icon: <Settings className="w-4 h-4" /> },
   ];
-
   // Helper to extract page title from path
   const getPageTitle = () => {
     const path = location.pathname;
@@ -181,74 +164,25 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </button>
         </div>
 
-        {/* Workspace Switcher / Info */}
-        <div className="p-3 border-b border-paper-border bg-paper-subtle/40">
-          <NavLink
-            to="/app/brand-kit"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 p-2 rounded-lg bg-white border border-paper-border shadow-2xs hover:border-forest-300 transition-colors group"
-          >
-            <div 
-              className="w-7 h-7 rounded text-white flex items-center justify-center font-display font-bold text-xs shrink-0 shadow-xs"
-              style={{ backgroundColor: brandKit.primaryColor || '#0F3D2E' }}
+        {/* Navigation Items */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
+                isActive
+                  ? "bg-forest-50/80 text-forest"
+                  : "text-slate-600 hover:text-ink hover:bg-slate-50"
+              )}
             >
-              {getWorkspaceInitials()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-ink truncate leading-tight group-hover:text-forest transition-colors">
-                {brandKit.companyName || userProfile.company || 'CuratePDF Workspace'}
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span className="text-[10px] text-slate-500 font-medium">Pro Workspace</span>
-              </div>
-            </div>
-          </NavLink>
-        </div>
-
-        {/* Navigation Sections */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-          {navSections.map((section, idx) => (
-            <div key={idx} className="space-y-1">
-              <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 font-display">
-                {section.title}
-              </h3>
-              <div className="space-y-0.5 pt-1">
-                {section.items.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.end}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) => cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all",
-                      isActive
-                        ? "bg-forest-50 text-forest border border-forest-200/60 shadow-2xs"
-                        : "text-slate-600 hover:text-ink hover:bg-paper-warm"
-                    )}
-                  >
-                    <span className="shrink-0">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </NavLink>
-                ))}
-              </div>
-            </div>
+              <span className="shrink-0">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
           ))}
-        </div>
-
-        {/* Sidebar Footer Link */}
-        <div className="p-3 border-t border-paper-border bg-paper-subtle/30">
-          <NavLink
-            to="/"
-            target="_blank"
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-500 hover:text-ink hover:bg-white border border-transparent hover:border-paper-border transition-all"
-          >
-            <span className="flex items-center gap-2">
-              <ExternalLink className="w-3.5 h-3.5" />
-              Public Website
-            </span>
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">curatepdf.site</span>
-          </NavLink>
         </div>
       </aside>
 
