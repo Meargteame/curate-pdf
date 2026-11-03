@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { 
   ArrowRight, 
-  CheckCircle2, 
   Layers, 
   Palette, 
   FileCode, 
@@ -104,65 +103,35 @@ with open("statement.pdf", "wb") as f:
       <div className="absolute inset-0 bg-dot-grid opacity-45 pointer-events-none -z-10" />
 
       {/* Hero Section */}
-      <section className="pt-8 sm:pt-16 px-4 sm:px-8 max-w-7xl mx-auto text-center">
-        {/* Eyebrow Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-50/90 border border-forest-200/80 text-forest text-xs font-semibold shadow-2xs mb-6">
-          <span className="w-2 h-2 rounded-full bg-forest animate-pulse" />
-          <span>Real Vector PDF Engine • Centralized Brand System</span>
-        </div>
-
+      <section className="pt-4 sm:pt-8 px-4 sm:px-8 max-w-7xl mx-auto text-center">
         {/* Headline: Clean 2-Line Architectural Balance */}
-        <h1 className="text-4xl sm:text-6xl font-display font-extrabold tracking-tight text-ink max-w-3xl mx-auto leading-[1.1] mb-6">
+        <h1 className="text-4xl sm:text-6xl font-display font-extrabold tracking-tight text-ink max-w-3xl mx-auto leading-[1.1] mb-5">
           Professional PDFs, <br className="hidden sm:inline" />
           <span className="text-forest">engineered for precision.</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
+        <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-6">
           Transform structured business data into publication-ready proposals, invoices, and executive reports. Centralized brand tokens, real-time vector canvas, and sub-100ms headless developer APIs.
         </p>
 
-        {/* Primary and Secondary CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
+        {/* Primary CTA */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-3">
           <Button
             variant="primary"
             size="lg"
             onClick={() => navigate('/app/editor')}
             rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="h-12 px-7 text-sm sm:text-base font-bold shadow-md hover:shadow-xl w-full sm:w-auto justify-center"
+            className="h-12 px-8 text-sm sm:text-base font-bold shadow-md hover:shadow-xl w-full sm:w-auto justify-center"
           >
             Create your first PDF
           </Button>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => navigate('/templates')}
-            leftIcon={<FileCode className="w-4 h-4 text-forest" />}
-            className="h-12 px-7 text-sm sm:text-base font-semibold w-full sm:w-auto justify-center border-paper-border hover:bg-slate-50"
-          >
-            Explore 8 templates
-          </Button>
         </div>
 
-        {/* Highlights */}
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-medium text-slate-500 mb-12">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-forest" />
-            <span>Instant Vector Rendering (300 DPI)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-forest" />
-            <span>Centralized Brand Tokens</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-forest" />
-            <span>Bulk CSV Batch Generator</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-forest" />
-            <span>Headless REST API</span>
-          </div>
-        </div>
+        {/* Trust micro-copy */}
+        <p className="text-xs text-slate-400 font-medium mb-10">
+          Instant client-side vector engine • 100% free starter tier • Zero watermarks
+        </p>
 
         {/* Interactive Studio Workstation Mockup */}
         <div className="max-w-6xl mx-auto w-full relative">
