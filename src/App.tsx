@@ -59,7 +59,7 @@ export function App() {
         <Route element={<AppLayout toasts={toasts} onDismissToast={dismissToast} />}>
           <Route path="/app" element={<Overview onShowToast={showToast} />} />
           <Route path="/app/documents" element={<DocumentLibrary onShowToast={showToast} />} />
-          <Route path="/app/templates" element={<TemplateGallery />} />
+          <Route path="/app/templates" element={<TemplateGallery onShowToast={showToast} />} />
           <Route path="/app/editor" element={<DocumentEditor onShowToast={showToast} />} />
           <Route path="/app/brand-kit" element={<BrandKit onShowToast={showToast} />} />
           <Route path="/app/brand" element={<Navigate to="/app/brand-kit" replace />} />

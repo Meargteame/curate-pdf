@@ -68,9 +68,11 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
     }
   };
 
-  const handleQuickDownload = async (doc: DocumentData) => {
-    // Open in editor or download
-    navigate(`/app/editor?id=${doc.id}`);
+  const handleQuickDownload = (doc: DocumentData) => {
+    window.open(`/api/v1/documents/${doc.id}/pdf`, '_blank');
+    if (onShowToast) {
+      onShowToast('Downloading PDF', `Streaming vector PDF for "${doc.title}"`, 'info');
+    }
   };
 
   return (
@@ -312,9 +314,10 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
                           variant="secondary"
                           size="sm"
                           onClick={() => handleQuickDownload(doc)}
+                          leftIcon={<Download className="w-3.5 h-3.5 text-forest" />}
                           className="h-8 px-2.5 text-xs text-forest"
                         >
-                          Open & Download
+                          Download PDF
                         </Button>
                       </div>
                     </td>
