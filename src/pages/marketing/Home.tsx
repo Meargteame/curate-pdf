@@ -21,29 +21,15 @@ import {
   Award, 
   UserCheck, 
   ScrollText,
-  Sliders,
   Maximize2
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { LivePDFCanvas } from '../../components/document/LivePDFCanvas';
-import { getStoredBrandKit, getStoredTemplates, INITIAL_DOCUMENTS } from '../../utils/storage';
+import { getStoredBrandKit, getStoredTemplates } from '../../utils/storage';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const brandKit = getStoredBrandKit();
   const templates = getStoredTemplates();
-
-  // Selected preview doc in hero
-  const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
-  const heroDocuments = INITIAL_DOCUMENTS;
-  const currentHeroDoc = heroDocuments[selectedHeroIndex] || heroDocuments[0];
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const [activeApiTab, setActiveApiTab] = useState<'curl' | 'node' | 'python'>('curl');
   const [isCopied, setIsCopied] = useState(false);
@@ -103,7 +89,7 @@ with open("statement.pdf", "wb") as f:
       <div className="absolute inset-0 bg-dot-grid opacity-45 pointer-events-none -z-10" />
 
       {/* Hero Section */}
-      <section className="pt-4 sm:pt-8 px-4 sm:px-8 max-w-7xl mx-auto text-center">
+      <section className="pt-12 sm:pt-20 pb-16 px-4 sm:px-8 max-w-5xl mx-auto text-center">
         {/* Headline: Clean 2-Line Architectural Balance */}
         <h1 className="text-4xl sm:text-6xl font-display font-extrabold tracking-tight text-ink max-w-3xl mx-auto leading-[1.1] mb-5">
           Professional PDFs, <br className="hidden sm:inline" />
@@ -129,138 +115,9 @@ with open("statement.pdf", "wb") as f:
         </div>
 
         {/* Trust micro-copy */}
-        <p className="text-xs text-slate-400 font-medium mb-10">
+        <p className="text-xs text-slate-400 font-medium ">
           Instant client-side vector engine • 100% free starter tier • Zero watermarks
         </p>
-
-        {/* Interactive Studio Workstation Mockup */}
-        <div className="max-w-6xl mx-auto w-full relative">
-          <div className="bg-white rounded-2xl border border-paper-border shadow-card hover:shadow-card-hover transition-all overflow-hidden text-left">
-            {/* Window Chrome Toolbar */}
-            <div className="bg-slate-50/95 border-b border-paper-border px-4 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/40" />
-                  <span className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/40" />
-                  <span className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/40" />
-                </div>
-                <span className="text-slate-300 hidden sm:inline">|</span>
-                <span className="font-mono text-xs font-semibold text-slate-700 truncate max-w-[150px] sm:max-w-none">
-                  {currentHeroDoc.title}
-                </span>
-                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-slate-200/60 text-slate-600 font-medium">
-                  {currentHeroDoc.referenceNumber} • A4 (300 DPI)
-                </span>
-              </div>
-
-              {/* Template Switcher Tabs */}
-              <div className="flex items-center bg-white p-1 rounded-xl border border-paper-border shadow-2xs overflow-x-auto">
-                {heroDocuments.slice(0, 4).map((doc, idx) => (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => setSelectedHeroIndex(idx)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                      selectedHeroIndex === idx
-                        ? 'bg-forest text-white shadow-2xs'
-                        : 'text-slate-600 hover:text-ink hover:bg-slate-50'
-                    }`}
-                  >
-                    {doc.category === 'business'
-                      ? 'Proposal'
-                      : doc.category === 'finance'
-                      ? 'Invoice'
-                      : doc.category === 'reports'
-                      ? 'Report'
-                      : 'Certificate'}
-                  </button>
-                ))}
-              </div>
-
-              {/* Edit in Studio Action */}
-              <button
-                type="button"
-                onClick={() => navigate(`/app/editor?id=${currentHeroDoc.id}`)}
-                className="hidden sm:inline-flex px-3.5 py-1.5 bg-forest text-white hover:bg-forest-900 text-xs font-bold rounded-lg transition-colors items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-              >
-                <span>Edit in Studio</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Split Studio Workbench: Inspector Left, Live Sheet Right */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[580px] bg-slate-100/60">
-              {/* Left Live Inspector Panel */}
-              <div className="hidden lg:flex lg:col-span-4 p-6 border-r border-paper-border bg-white flex-col justify-between space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-paper-border">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-forest font-display flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5" />
-                      Document Schema
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
-                      Live Canvas Active
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 text-xs">
-                    <div>
-                      <span className="text-slate-400 block text-[11px] font-medium mb-1">Document Title</span>
-                      <div className="font-semibold text-ink p-2 rounded-lg bg-paper-subtle border border-paper-border">
-                        {currentHeroDoc.title}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-slate-400 block text-[11px] font-medium mb-1">Recipient</span>
-                        <div className="font-semibold text-ink p-2 rounded-lg bg-paper-subtle border border-paper-border truncate">
-                          {currentHeroDoc.clientCompany || currentHeroDoc.clientName || 'Acme Group'}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block text-[11px] font-medium mb-1">Financial Total</span>
-                        <div className="font-mono font-bold text-forest p-2 rounded-lg bg-paper-subtle border border-paper-border">
-                          {currentHeroDoc.total ? `$${currentHeroDoc.total.toLocaleString()}` : 'Statement'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-slate-400 block text-[11px] font-medium mb-1">Applied Brand Token</span>
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-paper-subtle border border-paper-border">
-                        <span className="w-4 h-4 rounded-full border border-white shadow-2xs shrink-0" style={{ backgroundColor: brandKit.primaryColor }} />
-                        <span className="font-semibold text-ink text-xs truncate">{brandKit.companyName}</span>
-                        <span className="ml-auto font-mono text-[10px] text-slate-500">{brandKit.primaryColor}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-forest-50/60 border border-forest-100 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-forest">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Pure Vector Guarantee</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Zero page-break overflows or blurry text. Rendered at true 300 DPI for high-end corporate delivery.
-                  </p>
-                </div>
-              </div>
-
-              {/* Right Canvas: Generous & Crisp */}
-              <div className="lg:col-span-8 p-4 sm:p-8 flex items-center justify-center overflow-auto bg-[#F4F6F5] relative shadow-inner">
-                <div className="relative shadow-[0_24px_60px_-15px_rgba(15,61,46,0.18),0_6px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.06)] rounded-sm overflow-hidden bg-white transition-all duration-300">
-                  <LivePDFCanvas
-                    document={currentHeroDoc}
-                    brandKit={brandKit}
-                    zoom={isMobile ? 0.38 : 0.70}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Connected 5-Step Pipeline */}
