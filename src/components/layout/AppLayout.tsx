@@ -19,7 +19,10 @@ import {
   ChevronDown,
   Search,
   Command,
-  FileText
+  FileText,
+  Edit3,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { Button } from '../ui/Button';
@@ -44,6 +47,34 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   onDismissToast = () => {} 
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('curate_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('curate_sidebar_collapsed', String(next));
+      }
+      return next;
+    });
+  };
+
+  // Keyboard shortcut Ctrl+B / Cmd+B to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleCollapse();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [brandKit, setBrandKit] = useState<BrandKitConfig>(() => getStoredBrandKit());
   const [userProfile, setUserProfile] = useState<UserProfile>(() => getStoredUserProfile());
@@ -94,13 +125,66 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const isEditor = location.pathname.startsWith('/app/editor');
 
   const navItems = [
-    { label: 'Overview', to: '/app', icon: <LayoutDashboard className="w-4 h-4" />, end: true },
-    { label: 'Documents', to: '/app/documents', icon: <Files className="w-4 h-4" /> },
-    { label: 'Templates', to: '/app/templates', icon: <FileCode className="w-4 h-4" /> },
-    { label: 'Brand Kit', to: '/app/brand-kit', icon: <Palette className="w-4 h-4" /> },
-    { label: 'Bulk Generation', to: '/app/bulk', icon: <Layers className="w-4 h-4" /> },
-    { label: 'Developer Tools', to: '/app/developer', icon: <Terminal className="w-4 h-4" /> },
-    { label: 'Settings', to: '/app/settings', icon: <Settings className="w-4 h-4" /> },
+    { 
+      label: 'Overview', 
+      to: '/app', 
+      icon: <LayoutDashboard className="w-4 h-4" />, 
+      end: true,
+      badge: null,
+      description: 'Workspace activity & metrics'
+    },
+    { 
+      label: 'Documents', 
+      to: '/app/documents', 
+      icon: <Files className="w-4 h-4" />,
+      badge: documents.length > 0 ? String(documents.length) : null,
+      description: 'PDF archive & revision history'
+    },
+    { 
+      label: 'Templates', 
+      to: '/app/templates', 
+      icon: <FileCode className="w-4 h-4" />,
+      badge: templates.length > 0 ? String(templates.length) : null,
+      description: '8 vector document schemas'
+    },
+    { 
+      label: 'Document Editor', 
+      to: '/app/editor', 
+      icon: <Edit3 className="w-4 h-4" />,
+      badge: 'Live',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80',
+      description: 'Interactive visual vector studio'
+    },
+    { 
+      label: 'Brand Kit', 
+      to: '/app/brand-kit', 
+      icon: <Palette className="w-4 h-4" />,
+      badge: null,
+      description: 'Color tokens, typography & logo'
+    },
+    { 
+      label: 'Bulk Generation', 
+      to: '/app/bulk', 
+      icon: <Layers className="w-4 h-4" />,
+      badge: 'CSV',
+      badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200/80',
+      description: 'Batch spreadsheet merge engine'
+    },
+    { 
+      label: 'Developer Tools', 
+      to: '/app/developer', 
+      icon: <Terminal className="w-4 h-4" />,
+      badge: 'API',
+      badgeColor: 'bg-slate-100 text-slate-600 border border-slate-200/80',
+      description: 'REST API, SDKs & Webhooks'
+    },
+    { 
+      label: 'Settings', 
+      to: '/app/settings', 
+      icon: <Settings className="w-4 h-4" />,
+      badge: null,
+      description: 'Workspace preferences & security'
+    },
   ];
   // Helper to extract page title from path
   const getPageTitle = () => {
@@ -147,47 +231,170 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
       {/* Sidebar Navigation */}
       <aside className={cn(
-        "fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-paper-border flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0",
+        "fixed top-0 bottom-0 left-0 z-50 bg-white border-r border-paper-border flex flex-col transition-all duration-300 ease-in-out lg:translate-x-0",
+        isCollapsed ? "w-20" : "w-64",
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Brand Header */}
-        <div className="h-16 flex items-center justify-between px-5 border-b border-paper-border">
-          <NavLink to="/" className="inline-block" onClick={() => setMobileMenuOpen(false)}>
-            <Logo size="md" />
-          </NavLink>
-          <button 
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-ink"
+        <div className={cn(
+          "h-16 flex items-center border-b border-paper-border px-4 transition-all shrink-0",
+          isCollapsed ? "justify-center" : "justify-between"
+        )}>
+          <NavLink 
+            to="/" 
+            className="inline-flex items-center focus:outline-hidden" 
             onClick={() => setMobileMenuOpen(false)}
-            aria-label="Close sidebar"
+            title="CuratePDF Home"
           >
-            <X className="w-5 h-5" />
-          </button>
+            {isCollapsed ? (
+              <Logo variant="icon" size="md" />
+            ) : (
+              <Logo size="md" />
+            )}
+          </NavLink>
+          {!isCollapsed && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleCollapse}
+                className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                title="Collapse sidebar (⌘B)"
+                aria-label="Collapse sidebar"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
+              <button 
+                className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-ink"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close sidebar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5">
           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
-                isActive
-                  ? "bg-forest-50/80 text-forest"
-                  : "text-slate-600 hover:text-ink hover:bg-slate-50"
-              )}
-            >
-              <span className="shrink-0">{item.icon}</span>
-              <span>{item.label}</span>
-            </NavLink>
+            !isCollapsed ? (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={() => setMobileMenuOpen(false)}
+                title={item.description}
+                className={({ isActive }) => cn(
+                  "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group",
+                  isActive
+                    ? "bg-forest-50/90 text-forest shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-ink hover:bg-slate-50"
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="shrink-0 transition-transform group-hover:scale-105">{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {item.badge && (
+                  <span className={cn(
+                    "text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 font-mono",
+                    item.badgeColor || "bg-slate-100 text-slate-600"
+                  )}>
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            ) : (
+              <div key={item.to} className="relative group flex justify-center py-0.5">
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) => cn(
+                    "w-11 h-10 rounded-xl flex items-center justify-center transition-all",
+                    isActive
+                      ? "bg-forest text-white shadow-xs"
+                      : "text-slate-500 hover:text-ink hover:bg-slate-100"
+                  )}
+                >
+                  <span className="shrink-0">{item.icon}</span>
+                </NavLink>
+
+                {/* Sleek Floating Hover Popover / Tooltip */}
+                <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 hidden group-hover:flex flex-col gap-0.5 px-3 py-1.5 bg-ink text-white rounded-lg shadow-xl z-50 pointer-events-none whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-150">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-xs text-white">{item.label}</span>
+                    {item.badge && (
+                      <span className="text-[9px] bg-white/20 text-white px-1.5 py-0.2 rounded font-mono font-bold">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-300 font-normal">{item.description}</span>
+                </div>
+              </div>
+            )
           ))}
+        </div>
+
+        {/* Sleek Sidebar Footer */}
+        <div className="p-3 border-t border-paper-border shrink-0">
+          {!isCollapsed ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-2 py-1 text-slate-500">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div 
+                    className="w-6 h-6 rounded-md text-white flex items-center justify-center font-display font-bold text-[10px] shrink-0 shadow-2xs"
+                    style={{ backgroundColor: brandKit.primaryColor || '#0F3D2E' }}
+                  >
+                    {getWorkspaceInitials()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-ink truncate leading-tight">
+                      {brandKit.companyName || userProfile.company || 'CuratePDF'}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium truncate">
+                      {userProfile.planStatus || 'Pro Workspace'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={toggleCollapse}
+                className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-ink hover:bg-slate-100 transition-colors"
+                title="Collapse sidebar (⌘B)"
+              >
+                <PanelLeftClose className="w-4 h-4 shrink-0 text-slate-400" />
+                <span>Collapse Sidebar</span>
+                <kbd className="ml-auto font-mono text-[9px] text-slate-400 bg-slate-100 px-1 py-0.5 rounded">⌘B</kbd>
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div 
+                className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-display font-bold text-xs shrink-0 shadow-2xs"
+                style={{ backgroundColor: brandKit.primaryColor || '#0F3D2E' }}
+                title={`${brandKit.companyName || userProfile.company} (${userProfile.planStatus || 'Pro'})`}
+              >
+                {getWorkspaceInitials()}
+              </div>
+              <button
+                onClick={toggleCollapse}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-forest hover:bg-forest-50 transition-colors"
+                title="Expand sidebar (⌘B)"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeftOpen className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 lg:pl-64 flex flex-col min-h-screen overflow-x-hidden">
+      <div className={cn(
+        "flex-1 min-w-0 flex flex-col min-h-screen overflow-x-hidden transition-all duration-300 ease-in-out",
+        isCollapsed ? "lg:pl-20" : "lg:pl-64"
+      )}>
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-paper-border sticky top-0 z-30 flex items-center justify-between px-4 sm:px-8">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -197,6 +404,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
+            </button>
+            <button
+              onClick={toggleCollapse}
+              className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              title={isCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <PanelLeftOpen className="w-4 h-4 text-forest" /> : <PanelLeftClose className="w-4 h-4" />}
             </button>
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500">
               <NavLink to="/app" className="hover:text-forest transition-colors hidden xs:inline">Workspace</NavLink>
