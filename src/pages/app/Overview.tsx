@@ -77,43 +77,39 @@ export const Overview: React.FC<{ onShowToast?: (title: string, message?: string
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-br from-[#07241A] via-forest-900 to-[#0F3D2E] text-white border border-forest-800/80 rounded-2xl p-6 sm:p-8 shadow-doc-lg flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        {/* Subtle decorative brand motif & ambient glow */}
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-mint/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute inset-0 bg-dot-grid-dark opacity-20 pointer-events-none" />
-
-        <div className="space-y-2 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-800/70 border border-forest-600/60 text-mint text-xs font-semibold shadow-2xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-mint" />
+      {/* Workspace Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 pb-1">
+        <div>
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink tracking-tight">
+              Welcome back, {userProfile.name.split(' ')[0] || 'Sarah'}
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>{brandKit.companyName || userProfile.company}</span>
             </span>
-            <span>{brandKit.companyName || userProfile.company} • {userProfile.planStatus || 'Pro Workspace'}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-white">
-            Welcome back, {userProfile.name.split(' ')[0] || 'there'}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-            High-precision document automation engine. Build, preview in real time, and batch-render print-ready vector PDFs.
+          <p className="text-xs sm:text-sm text-slate-500">
+            {userProfile.planStatus || 'Pro Workspace'} • Design, compile, and batch-render print-ready vector PDFs.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <Button
-            variant="glass"
+            variant="secondary"
             size="md"
             onClick={() => navigate('/app/templates')}
-            leftIcon={<FileCode className="w-4 h-4 text-forest-300" />}
-            className="text-white border-white/20 hover:bg-white/10"
+            leftIcon={<Layers className="w-4 h-4 text-slate-500" />}
+            className="h-10 px-4 text-xs sm:text-sm font-semibold border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs"
           >
-            Browse templates
+            Browse Templates
           </Button>
           <Button
-            variant="mint"
+            variant="primary"
             size="md"
             onClick={() => navigate('/app/editor')}
-            leftIcon={<Plus className="w-4 h-4 text-forest-950" />}
+            leftIcon={<Plus className="w-4 h-4 text-white" />}
+            className="h-10 px-4 text-xs sm:text-sm font-semibold shadow-xs"
           >
             Create PDF
           </Button>
